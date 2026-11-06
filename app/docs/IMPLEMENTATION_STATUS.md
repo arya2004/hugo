@@ -22,3 +22,7 @@ Removed the unused root blueprint SQL, reference allocator and test, reference c
 ## Trusted workflow payload for POC
 
 The post-merge workflow now gathers contribution details and sends them directly to the hosted API. The backend treats that payload as source of truth and no longer refetches or verifies merges/evidence with GitHub. One shared merge API secret remains. Registration still uses GitHub API to select the owner repository, while contributor wallet login remains separate. 0G inference and payout processing stay synchronous. No live workflow invocation claimed.
+
+## Repository cleanup
+
+Removed redundant blueprint/archive/setup documents, diagnostic network-smoke script, local editor settings and Prettier configuration/scripts/dependencies. The root README is the setup guide. Required Arkiv sponsor criterion documents and this status log remain.

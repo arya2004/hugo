@@ -17,10 +17,7 @@
     "test:db": "node tests/integration/database.mjs",
     "test:smoke": "tsx scripts/smoke.ts",
     "arkiv:sync": "tsx scripts/arkiv-sync.ts",
-    "test:network": "tsx scripts/network-smoke.ts",
-    "compile:project": "node scripts/compile-project.mjs",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.{ts,mjs}\" \"tests/**/*.{ts,mjs}\" \"contracts/**/*.sol\" \"cre/workflow/main.ts\" \"*.{ts,mjs,json}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.{ts,mjs}\" \"tests/**/*.{ts,mjs}\" \"contracts/**/*.sol\" \"cre/workflow/main.ts\" \"*.{ts,mjs,json}\""
+    "compile:project": "node scripts/compile-project.mjs"
   },
   "dependencies": {
     "@arkiv-network/sdk": "1.0.1",
@@ -46,8 +43,6 @@
     "eslint-config-next": "16.4.5",
     "hardhat": "3.21.2",
     "pg": "8.23.1",
-    "prettier": "3.9.10",
-    "prettier-plugin-solidity": "2.4.1",
     "solc": "0.8.30",
     "tsx": "4.23.15",
     "typescript": "6.0.3",
