@@ -34,6 +34,46 @@ Set the required values in Vercel's environment settings and redeploy after chan
 
 ## Verify
 
+### Useful pages
+
+Production origin: `https://hugo-three-amber.vercel.app`. Replace `<project-id>` with the UUID shown in your project's URL and `<treasury-address>` with its Arc contract address.
+
+| Page | Link / path | Access |
+|---|---|---|
+| Home | [Open Hugo](https://hugo-three-amber.vercel.app/) | Public |
+| Owner workspace | [Open admin](https://hugo-three-amber.vercel.app/admin) | Owner GitHub login |
+| Register repository | [New project](https://hugo-three-amber.vercel.app/admin/projects/new) | Owner login |
+| Project funding and rewards | `/admin/projects/<project-id>` | Project owner |
+| Start / stop funding | `/admin/projects/<project-id>/settings` | Project owner |
+| Contributor login, claims and withdrawal | [Open redeem](https://hugo-three-amber.vercel.app/redeem) | GitHub through thirdweb |
+| Public attestations | [Open Arkiv](https://hugo-three-amber.vercel.app/arkiv) | Public |
+| Donate to a known treasury | `/support/<treasury-address>` | Public; wallet needed to donate |
+
+### Useful API routes
+
+GET links below can be opened in a browser. Protected endpoints require the indicated session or bearer token. POST routes are called by the UI, integration workflow or publishing script, not by opening a browser link.
+
+| Method | URL / path | Purpose / access |
+|---|---|---|
+| GET | [Health](https://hugo-three-amber.vercel.app/api/health) | Public database/Arc connectivity check |
+| GET | [Arkiv contributions](https://hugo-three-amber.vercel.app/api/arkiv/contributions) | Public live contribution query |
+| GET | [Arkiv programs](https://hugo-three-amber.vercel.app/api/arkiv/programs) | Public live project attestation query |
+| GET | `/api/cre/report/<reservation-id>` | CRE reward report; bearer `CRE_EXTERNAL_REPORT_TOKEN` |
+| GET | `/api/me` | Owner identity and linked wallets; owner session |
+| GET | `/api/projects` | Signed-in owner's projects |
+| GET | `/api/projects/<project-id>` | Project funding state; owner session |
+| GET | `/api/projects/<project-id>/rewards` | Reservations and payout references; owner session |
+| GET | `/api/contributor/allocations` | Unclaimed confirmed allocations; contributor session |
+| POST | `/api/merge/github` | Evaluate merged PR and process reward; bearer `MERGE_TRIGGER_SECRET` |
+| POST | `/api/internal/arkiv/sync` | Publish queued attestation; bearer `WORKER_API_SECRET` |
+| POST | `/api/projects/prepare`, `/api/projects` | Prepare and register treasury; owner session |
+| POST | `/api/projects/<project-id>/funding-confirm`, `/api/projects/<project-id>/funding-state-confirm` | Confirm funding transaction; owner session |
+| POST | `/api/wallet/challenge`, `/api/wallet/verify` | Bind owner wallet; owner session |
+| POST | `/api/contributor/challenge`, `/api/contributor/verify` | Establish contributor wallet session |
+| POST | `/api/contributor/allocations/<allocation-id>/claim` | Claim reserved reward; contributor session |
+
+The reservation ID is a reward UUID, not a project UUID or transaction hash. The current CRE example uses `1fbe33a9-49fa-4ff8-a96f-d6c40b573719`. Authentication callbacks use `/auth/callback`; start login through the UI rather than opening that callback manually.
+
 - `/api/health` checks database and Arc connectivity.
 - `/arkiv` displays live public attestations when Arkiv is configured and records have been published.
 - The CRE workflow in `app/cre` can be simulated with the Chainlink CLI; network deployment requires Chainlink access approval.
@@ -67,3 +107,37 @@ Install Bun and the CRE CLI, run `cre login`, and set `CRE_EXTERNAL_REPORT_TOKEN
 ## Community
 
 See [Contributing](CONTRIBUTING.md), the [Code of Conduct](CODE_OF_CONDUCT.md), and [Security](SECURITY.md). Hugo is licensed under the [MIT License](LICENSE).
+
+## Architecture and submission evidence
+
+```mermaid
+flowchart LR
+  Owner[Repository owner] --> UI[Hugo UI on Vercel]
+  UI --> DB[Supabase: auth and private reward state]
+  Merge[Merged PR / GitHub Actions] --> API[Hugo synchronous API]
+  API --> AI[0G or OpenAI evaluation]
+  API --> Arc[Arc Testnet treasury / USDC]
+  Arc --> Wallet[Contributor thirdweb wallet]
+  API --> Arkiv[Arkiv Rabdi attestations]
+  UI --> Arkiv
+  CRE[Chainlink CRE verification] --> API
+  CRE --> Arc
+```
+
+Live app: https://hugo-three-amber.vercel.app · [Public attestations](https://hugo-three-amber.vercel.app/arkiv).
+
+- [Arc treasury](https://explorer.testnet.arc.io/address/0xeea6446c0559f631692ab6ad09b5ee2f2cd642c8) · [Confirmed payout](https://explorer.testnet.arc.io/tx/0x60760c43545b468bfa99fba647597a1585756373fce8cf36dce1c98cad3b07b4).
+- Arkiv writer: `0x112634b7dabb3af1862d802116dcc329ae1083ce` on Rabdi (7794095).
+- [Program publication](https://rabdi.explorer.arkiv.network/tx/0x4d5c2237f581a0488c2ded7b32815ed71f7e3e1ddcb358c8248b586d00e920de) · [Contribution publication](https://rabdi.explorer.arkiv.network/tx/0xa5a7f62e4b15869adee4f34839562eaf22c9eeb0e7eea57fdd66ca15fb097d5f).
+
+Run this live Arkiv query without app login:
+
+```sh
+curl --fail --silent --show-error https://hugo-three-amber.vercel.app/api/arkiv/contributions
+```
+
+The endpoint queries Arkiv by issuer ownership, `project=proof-of-contribution`, and `kind=Contribution`; it returns the latest revision per subject among fetched results. See [SDK query/schema implementation](app/src/server/arkiv.ts) and [Arkiv criterion documents](arkiv/schema.md). Publication is manually triggered with the command above; it is not automatic after every merge.
+
+AI disclosure: OpenAI Codex assisted with implementation, debugging and documentation. Runtime contribution evaluation uses the explicitly selected AI provider. Its output is validated, while monetary allocation is calculated in code. No specific 0G request is claimed without its recorded provider and request ID.
+
+See [checklist.md](checklist.md) for qualification evidence and outstanding manual steps, including Arc Studio, public repository access and the demo video.
