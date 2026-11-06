@@ -70,8 +70,8 @@ https://hugo-three-amber.vercel.app
 Add both **Redirect URLs**, then save:
 
 ```text
-https://hugo-three-amber.vercel.app/auth/callback
-http://localhost:3000/auth/callback
+https://hugo-three-amber.vercel.app/auth/callback**
+http://localhost:3000/auth/callback**
 ```
 
 In **Authentication → Providers → GitHub**, keep GitHub enabled. Its Client ID and Client Secret come from your [GitHub OAuth App](https://github.com/settings/developers). If you have not created one, [create it here](https://github.com/settings/applications/new).
@@ -81,6 +81,8 @@ The GitHub OAuth App's **Authorization callback URL** must be:
 ```text
 https://cugcgzgeevecgtratmrq.supabase.co/auth/v1/callback
 ```
+
+The `**` suffix on the Supabase redirect allowlist entries also permits the callback’s `?next=...` query string. If login returns to localhost, check that Supabase Site URL is the production origin and that these redirects were saved. Start a fresh login from the production `/admin` page afterward.
 
 That URL stays on Supabase. Do not change it to the Vercel callback. The browser goes GitHub → Supabase → Hugo. [Official login instructions](https://supabase.com/docs/guides/auth/social-sign-in/auth-github).
 
@@ -263,6 +265,16 @@ Do not append `/api/merge/github` to the URL. The active workflow in the **todo 
 
 For an **automatic payment**, the contributor must link their wallet beforehand through [Contributor login](https://hugo-three-amber.vercel.app/redeem). A thirdweb embedded wallet is created during login. A contributor who was unregistered at allocation gets a reserved share and can authenticate and claim later. Review-only participants get zero.
 
+### Send paid rewards to another Arc wallet
+
+1. Open [Contributor login](https://hugo-three-amber.vercel.app/redeem) and sign in with GitHub.
+2. Claim any reserved rewards first, if needed. Already paid rewards are in your embedded wallet.
+3. In **Withdraw all**, check the USDC balance and paste your MetaMask or other **Arc Testnet** address.
+4. Enter only the destination address, click **Review withdrawal**, check the calculated full amount and reserved fee, then click **Withdraw all**.
+5. Wait for confirmation and open the Arc transaction link. Select Arc Testnet in the receiving wallet to see the funds.
+
+Your embedded wallet signs this transfer directly. No private key is exported to Hugo, and Hugo's backend signer does not authorize it. The full spendable balance is calculated automatically after reserving the network fee; a small residual can remain if the actual fee is lower. This sends funds on Arc Testnet only, without bridging. Arc native USDC and the ERC-20 view share one balance; this full-balance withdrawal uses a native USDC transfer ([Arc explanation](https://www.arc.io/blog/usdc-for-every-action-how-arc-simplifies-building-onchain)). Refresh the balance if a new automatic payout arrived. After a page reload, sign in again to reconnect the embedded wallet controls.
+
 A PR merge does not guarantee a reward. Current calculation:
 
 ```text
@@ -416,7 +428,7 @@ npm run dev
 | Symptom | First thing to check |
 |---|---|
 | `db: down` | Vercel Production Supabase URL/server key, initialized schema, project not paused |
-| Local login works, hosted login fails | Production origin, Supabase redirects, current deployed auth fix |
+| Hosted login returns to localhost | Supabase Site URL must be production; allow the callback including its next query; redeploy the same-origin callback fix and start a fresh login |
 | Contract creation cannot send | Owner has Arc Testnet gas; backend key differs from owner |
 | Backend reservation/payment cannot send | Backend signer has Arc test funds and matches the treasury signer |
 | No reward | Funding active at supplied merge time; positive eligible score; pre-merge deposit; available funds |
