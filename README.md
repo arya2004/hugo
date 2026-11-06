@@ -63,3 +63,7 @@ cd ../..
 ```
 
 Install Bun and the CRE CLI, run `cre login`, and set `CRE_EXTERNAL_REPORT_TOKEN` in `app/cre/.env` to match Vercel. `app/cre/workflow/config.staging.json` must point to a confirmed reservation report and its Arc treasury. Select the cron trigger if prompted. A successful run prints `CRE_VALIDATED`; it is a local simulation that reads the hosted API and Arc, not a hosted CRE deployment.
+
+## Community
+
+See [Contributing](CONTRIBUTING.md), the [Code of Conduct](CODE_OF_CONDUCT.md), and [Security](SECURITY.md). Hugo is licensed under the [MIT License](LICENSE).
