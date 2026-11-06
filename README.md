@@ -4,6 +4,41 @@ This is the only setup guide you need. Paths below are relative to the repositor
 
 **Current state:** integration code exists, but no hosted app, deployed treasury, live inference, Arkiv write or successful CRE simulation is supplied. Use testnet assets only. This README is included in the repository; keep actual secrets in local environment files and hosting settings.
 
+## Start here: free plans and direct links
+
+**Use Supabase Free, Vercel Hobby, a public GitHub repository and faucet-funded testnet wallets. Do not select paid upgrades or a Pro trial.** Use the included `*.vercel.app` domain rather than buying a domain. No paid database, paid RPC, email service, VPS, thirdweb gas sponsorship or production CRE deployment is required by Hugo.
+
+**Important limitation:** a completely free end-to-end run is not guaranteed with the current required integrations. 0G inference needs usable credits; promotional credits are conditional, not an assured recurring free tier. thirdweb advertises a free wallet allowance, but access to the required GitHub wallet/profile API must be available on your account without a subscription. Arc Studio/CRE account access must also be available without a paid upgrade. If a service asks for payment, stop and request event/sponsor access instead of paying. This guide does not silently substitute fake inference or a different provider.
+
+| Service | Open this page directly | Free-only choice / limit |
+|---|---|---|
+| Supabase | [Sign up](https://supabase.com/dashboard/sign-up) · [Log in](https://supabase.com/dashboard/sign-in) · [Projects](https://supabase.com/dashboard/projects) | Choose **Free** organization/project. GitHub social OAuth is included; published allowance: 50,000 monthly active users, 500 MB database. Free projects can pause after a week of inactivity; resume before the demo. [Pricing](https://supabase.com/pricing) |
+| Vercel | [Sign up](https://vercel.com/signup) · [Log in](https://vercel.com/login) · [Import repository](https://vercel.com/new) · [Dashboard](https://vercel.com/dashboard) | Choose **Hobby**, for a personal/non-commercial POC. Stay within included usage; no Pro trial or custom-domain purchase. [Hobby terms and limits](https://vercel.com/docs/plans/hobby) |
+| GitHub | [Sign up](https://github.com/signup) · [Log in](https://github.com/login) · [New repository](https://github.com/new) | Public repo + existing standard `ubuntu-latest` runner. [Public-repo Actions usage](https://docs.github.com/en/actions/concepts/billing-and-usage) |
+| GitHub owner OAuth | [Create OAuth App](https://github.com/settings/applications/new) | Create the free OAuth application used by Supabase; no paid SSO required. |
+| GitHub token | [Create fine-grained token](https://github.com/settings/personal-access-tokens/new) | Repository registration token; a token is not a paid subscription. |
+| thirdweb | [Dashboard / sign in](https://thirdweb.com/dashboard) | Use standard GitHub embedded-wallet authentication and the free wallet allowance only. The pricing page lists the first 1,000 wallets free, alongside paid subscriptions; do not assume every API/add-on is free. Confirm your required access in the dashboard before proceeding. [Pricing](https://thirdweb.com/pricing) |
+| 0G | [Console / sign in](https://pc.0g.ai/) · [API keys](https://pc.0g.ai/dashboard/api-keys) · [Models](https://pc.0g.ai/models) | Use only an actual free promotional/event credit grant. No paid top-up, auto-recharge or staking purchase. If no grant exists, real AI evaluation is blocked under the zero-spend requirement. [Credit policy](https://pc.testnet.0g.ai/terms) |
+| Arc Studio | [Open Studio / sign in](https://studio.arc.io/) | Use available free/event access; do not purchase a Studio plan or credits. Account entitlements must be checked in Studio. |
+| Arc Testnet | [Get free test USDC](https://faucet.circle.com/) · [Explorer](https://explorer.testnet.arc.io/) | Select **Arc Testnet**, use the public RPC and faucet tokens only; never buy or bridge mainnet USDC for the demo. |
+| Arkiv | [Hub / connect wallet](https://hub.arkiv.network/) · [Access keys](https://hub.arkiv.network/access-keys) · [Free tGLM faucet](https://hub.arkiv.network/faucet) | Use Rabdi testnet, public/shared access and faucet tGLM; no paid dedicated infrastructure. [Access-key instructions](https://docs.arkiv.network/start-here/access-keys/) |
+| Chainlink CRE | [Account / sign in](https://app.chain.link/cre/discover) · [Install CLI](https://docs.chain.link/cre/getting-started/cli-installation/macos-linux) | Local CLI simulation only, using available free/event account access and public testnet RPC. Do not deploy a production CRE workflow or buy external API access. [Simulation overview](https://docs.chain.link/cre/overview) |
+
+Supabase **dashboard login** (the links above) creates your developer account. Your app's **GitHub login** is configured later in section 4 and does not require Supabase Pro. GitHub login also avoids needing a paid email delivery service. [Supabase GitHub setup](https://supabase.com/docs/guides/auth/social-sign-in/auth-github).
+
+### Open your project settings without searching
+
+After creating the accounts, save these links with your own identifiers substituted:
+
+- Supabase project: `https://supabase.com/dashboard/project/YOUR_PROJECT_REF` — open SQL Editor, Authentication and Project Settings here. Copy your project reference from this URL.
+- GitHub repository secrets: `https://github.com/YOUR_OWNER/YOUR_REPO/settings/secrets/actions`.
+- GitHub workflow runs: `https://github.com/YOUR_OWNER/YOUR_REPO/actions`.
+- Vercel project environment: `https://vercel.com/YOUR_SCOPE/YOUR_PROJECT/settings/environment-variables`.
+- Local owner login: [http://localhost:3000/admin](http://localhost:3000/admin).
+- Local contributor login: [http://localhost:3000/redeem](http://localhost:3000/redeem).
+
+These are templates, not already-created accounts or deployments. After hosting, replace the local origin with your actual `https://YOUR_APP.vercel.app` domain.
+
 ## 1. What you are deploying
 
 - **Vercel:** Next.js frontend and API from `app/`.
@@ -31,7 +66,7 @@ Arc requires Studio as the starting point. Creating a Studio project after build
 
 ## 3. Accounts and tools
 
-Create accounts at:
+Use the direct signup/login table above, or open these service dashboards:
 
 - [Supabase](https://supabase.com/dashboard)
 - [Vercel](https://vercel.com/new)
@@ -53,7 +88,7 @@ Edit `.env.local` with the values below. Never commit real secrets. Vercel will 
 
 ## 4. Supabase: database and owner GitHub login
 
-1. Create a Supabase project. Save its database password somewhere private.
+1. [Sign in to Supabase](https://supabase.com/dashboard/sign-in), choose a **Free** organization, and create a project from [your dashboard](https://supabase.com/dashboard/projects). Do not upgrade to Pro. Save its database password somewhere private.
 2. Open **SQL Editor**. Paste and run the entire `app/supabase/migrations/001_hugo.sql` file **once** on this fresh project. There is only one setup SQL file. It is not an upgrade script for old iterations.
 3. From the project's connection/API settings, copy:
    - Project URL → `NEXT_PUBLIC_SUPABASE_URL`.
@@ -101,13 +136,13 @@ The repository still needs to be registered and funded in Hugo before merging yo
 2. Open its [API keys dashboard](https://pc.0g.ai/dashboard/api-keys) and create a key.
 3. Set backend `OG_API_KEY` to that key.
 4. Open the [model catalog](https://pc.0g.ai/models), choose an available text/chat model, and copy its **actual model ID** into `OG_MODEL`.
-5. Ensure the account/key has usable credits or billing. Free hosting does not provide inference credits.
+5. Check that your account has actual free promotional/event credits. Do not enable billing, top up, auto-recharge or purchase staked tokens. 0G may grant promotional credits, but does not guarantee them for every account. If none are available, stop here and obtain sponsor credits; real evaluation cannot run at zero spend until then.
 
 The implementation uses the OpenAI-compatible endpoint `https://router-api.0g.ai/v1`. It is fixed in `src/server/evaluation.ts`; setting another `OG_BASE_URL` does not change this implementation. [Official 0G overview](https://docs.0g.ai/developer-hub/building-on-0g/compute-network/overview).
 
 ## 7. thirdweb contributor wallets
 
-1. In [thirdweb Dashboard](https://thirdweb.com/dashboard), create a project.
+1. In [thirdweb Dashboard](https://thirdweb.com/dashboard), create a project using available free access. Do not subscribe to Growth/Scale/Pro. Confirm standard GitHub authentication and the server profile API are available without upgrading; if not, request event access before proceeding.
 2. Copy its **Client ID** to `NEXT_PUBLIC_THIRDWEB_CLIENT_ID`.
 3. Copy the **Secret Key** from the same project to backend-only `THIRDWEB_SECRET_KEY`.
 4. Enable in-app/embedded wallets and GitHub as an authentication method. Complete any provider configuration the dashboard requests.
@@ -169,7 +204,7 @@ Open `http://localhost:3000/admin` and sign in with GitHub. There is no dummy-da
 For the hosted app:
 
 1. Push the repository to GitHub, including the root `.github/workflows/post-merge.yml`.
-2. In Vercel, import the repository and set **Root Directory = `app`**, framework **Next.js**, install `npm ci`, build `npm run build`. Use Node 24.x.
+2. [Sign in to Vercel](https://vercel.com/login), choose **Hobby** for this personal POC, and [import the repository](https://vercel.com/new). Do not start a Pro trial. Set **Root Directory = `app`**, framework **Next.js**, install `npm ci`, build `npm run build`. Use Node 24.x.
 3. Add the core environment values above. Add Arkiv/CRE values from the next sections when using those features.
 4. Deploy once to obtain the domain. Set `NEXT_PUBLIC_APP_URL` to that exact `https://...` origin and redeploy. Public variables are bundled during build, so changes require redeployment.
 5. Update Supabase redirects and thirdweb allowed domains. Set GitHub Actions `POC_API_URL` to the hosted origin.
