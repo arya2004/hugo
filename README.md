@@ -46,7 +46,7 @@ These are templates, not already-created accounts or deployments. After hosting,
 - **Arc Testnet:** one treasury contract per registered repository.
 - **0G Private Computer or OpenAI:** selectable AI evaluation of contribution evidence.
 - **thirdweb:** contributors authenticate with GitHub and receive an embedded wallet.
-- **GitHub Actions:** this repo's post-merge workflow sends contribution details to your hosted API and waits for its response.
+- **GitHub Actions:** the connected todo demo repository's post-merge workflow sends contribution details to your hosted API and waits for its response.
 - **Arkiv and CRE:** public attestations and an independent verification simulation; configure these after the core flow works.
 
 The backend trusts the evidence sent by the authenticated workflow, as requested for this POC. It calls the selected AI provider and processes funding/reservations/payment attempts synchronously. There is no central worker, dispatch queue or scheduled settlement workflow.
@@ -119,14 +119,14 @@ openssl rand -hex 32
 
 Copy it into backend `MERGE_TRIGGER_SECRET`.
 
-In **this GitHub repository → Settings → Secrets and variables → Actions → New repository secret**, add:
+In **the todo demo repository → Settings → Secrets and variables → Actions → New repository secret**, add:
 
 | Actions secret | Value |
 |---|---|
 | `POC_API_URL` | Hosted app origin, e.g. `https://YOUR_APP.vercel.app` |
 | `POC_MERGE_TRIGGER_SECRET` | Exact same value as backend `MERGE_TRIGGER_SECRET` |
 
-The active `.github/workflows/post-merge.yml` is already installed. It runs when a PR is merged, fetches contribution details using GitHub's automatic workflow token, and posts them to `/api/merge/github`. No `GITHUB_DISPATCH_TOKEN`, central worker repository or manually created workflow token is needed.
+The separate `hugo-todo-demo` repository has the active `.github/workflows/post-merge.yml`. Hugo itself has no active post-merge payout workflow. For another repository, copy [examples/github/post-merge.yml](examples/github/post-merge.yml) into its `.github/workflows/` folder; see the [integration example instructions](examples/github/README.md). The workflow collects contribution details using GitHub's automatic token and posts them to Hugo's `/api/merge/github`. No central worker or dispatch token is needed.
 
 The repository still needs to be registered and funded in Hugo before merging your demo PR. Pushing directly to the default branch does not trigger this PR-merge workflow.
 
@@ -232,7 +232,7 @@ Open `http://localhost:3000/admin` and sign in with GitHub. There is no dummy-da
 
 For the hosted app:
 
-1. Push the repository to GitHub, including the root `.github/workflows/post-merge.yml`.
+1. Push the Hugo application repository to GitHub. Separately push the todo demo repository with its active `.github/workflows/post-merge.yml`.
 2. [Sign in to Vercel](https://vercel.com/login), choose **Hobby** for this personal POC, and [import the repository](https://vercel.com/new). Do not start a Pro trial. Set **Root Directory = `app`**, framework **Next.js**, install `npm ci`, build `npm run build`. Use Node 24.x.
 3. Add the core environment values above. Add Arkiv/CRE values from the next sections when using those features.
 4. Deploy once to obtain the domain. Set `NEXT_PUBLIC_APP_URL` to that exact `https://...` origin and redeploy. Public variables are bundled during build, so changes require redeployment.
@@ -256,7 +256,7 @@ The merge handler requests `maxDuration=300`. Vercel's documented Hobby limit wi
 
    If already inside `app/`, omit `cd app`. If this changes the generated artifact, commit it and redeploy Vercel before registration so the browser and backend agree on bytecode.
 3. Open your deployed Hugo app → **Admin → Register repository**.
-4. Enter this repository as `OWNER/REPO` and choose the permanent **combined reward cap per PR** in USDC. The cap covers all recipients together and cannot be changed after deployment.
+4. Enter the **todo demo repository** as `OWNER/REPO` and choose the permanent **combined reward cap per PR** in USDC. The cap covers all recipients together and cannot be changed after deployment.
 5. Connect the **owner** browser-wallet account on Arc Testnet. Sign the wallet-binding message.
 6. Confirm the contract-creation transaction. The UI deploys `app/contracts/ContributionTreasury.sol` using the compiled artifact and these arguments:
 
@@ -279,7 +279,7 @@ The merge handler requests `maxDuration=300`. Vercel's documented Hobby limit wi
 1. Verify the deployed app, workflow secrets, owner/donor funds and backend signer gas balance.
 2. Donate **before** the PR merge, and Start Funding. Keep the first PR small.
 3. For automatic payment, have the contributor sign in once at `/redeem` using thirdweb GitHub before the merge. For the unregistered path, leave them unlinked.
-4. Open and merge a PR in this repository. In GitHub **Actions**, open **Hugo — evaluate merged PR**.
+4. Open and merge a PR in the **todo demo repository**. In that repository’s GitHub **Actions**, open **Hugo — evaluate merged PR**.
 5. The workflow sends contribution details; the API runs 0G, persists the assessment, calculates shares, confirms a reservation and attempts payments to already linked contributors. Inspect the action response and real Arc receipts.
 6. An unregistered contributor can now visit `/redeem`, log in with GitHub and claim their reserved share. Stopping funding does not cancel it.
 

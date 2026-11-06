@@ -1,6 +1,6 @@
 # Hugo implementation status
 
-Current architecture: this repository's post-merge workflow calls the hosted `/api/merge/github` synchronously. The backend verifies GitHub evidence, runs real 0G inference, persists evaluation and contributor scores, and processes Arc reservations and linked-wallet payouts in the request. Unregistered recipients claim their reserved shares separately.
+Current architecture: the connected demo repository's post-merge workflow calls the hosted `/api/merge/github` synchronously. The backend verifies GitHub evidence, runs real 0G inference, persists evaluation and contributor scores, and processes Arc reservations and linked-wallet payouts in the request. Unregistered recipients claim their reserved shares separately.
 
 Removed central evaluator workflow, dispatch code, worker script, job routes/table/functions, recovery endpoints/scripts and obsolete job tests. Fresh POC database setup is one file: `supabase/migrations/001_hugo.sql`. This replaces earlier POC setup files, not an existing database upgrade.
 
@@ -26,3 +26,7 @@ The post-merge workflow now gathers contribution details and sends them directly
 ## Repository cleanup
 
 Removed redundant blueprint/archive/setup documents, diagnostic network-smoke script, local editor settings and Prettier configuration/scripts/dependencies. The root README is the setup guide. Required Arkiv sponsor criterion documents and this status log remain.
+
+## Separate integration showcase
+
+Removed Hugo’s active post-merge workflow and moved it to `examples/github/post-merge.yml` with connection instructions. The sibling todo-demo repository retains its active workflow. Updated root README so registration, secrets and demo merges target the todo repository. No application runtime change or live payout occurred.
