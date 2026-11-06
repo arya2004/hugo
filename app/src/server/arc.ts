@@ -9,7 +9,8 @@ export function arc() {
     chain: arcTestnet,
     transport: http(process.env.NEXT_PUBLIC_ARC_RPC_URL ?? 'https://rpc.testnet.arc.io', {
       timeout: 15000,
-      retryCount: 1,
+      retryCount: 3,
+      retryDelay: 1000,
     }),
   });
 }

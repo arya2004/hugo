@@ -1,4 +1,5 @@
 import 'server-only';
+import { setTimeout as delay } from 'node:timers/promises';
 import { parseEventLogs, type Hex } from 'viem';
 import { arc, treasury } from './arc';
 import { projectAbi } from '../lib/project-contract';
@@ -115,6 +116,9 @@ export async function syncProjectHistory(project: any, mergedAt?: bigint) {
   }
   const { db, query } = await import('./db');
   for (let from = deployment.blockNumber; from <= head; from += 2000n) {
+    // The public RPC rate-limits bursts of history queries. Pace each batch,
+    // including the first one after the receipt and block reads above.
+    await delay(1000);
     const to = from + 1999n < head ? from + 1999n : head;
     const logs = await client.getContractEvents({
       address,
@@ -122,6 +126,12 @@ export async function syncProjectHistory(project: any, mergedAt?: bigint) {
       fromBlock: from,
       toBlock: to,
       strict: true,
+    }).catch(() => {
+      throw new AppError(
+        503,
+        'ARC_HISTORY_UNAVAILABLE',
+        'Arc history RPC is temporarily unavailable. Retry this workflow shortly.',
+      );
     });
     for (const log of logs) {
       if (log.eventName === 'FundingStateChanged') {
