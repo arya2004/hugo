@@ -44,12 +44,12 @@ These are templates, not already-created accounts or deployments. After hosting,
 - **Vercel:** Next.js frontend and API from `app/`.
 - **Supabase:** application database and GitHub owner login.
 - **Arc Testnet:** one treasury contract per registered repository.
-- **0G Private Computer:** AI evaluates contribution evidence.
+- **0G Private Computer or OpenAI:** selectable AI evaluation of contribution evidence.
 - **thirdweb:** contributors authenticate with GitHub and receive an embedded wallet.
 - **GitHub Actions:** this repo's post-merge workflow sends contribution details to your hosted API and waits for its response.
 - **Arkiv and CRE:** public attestations and an independent verification simulation; configure these after the core flow works.
 
-The backend trusts the evidence sent by the authenticated workflow, as requested for this POC. It calls 0G and processes funding/reservations/payment attempts synchronously. There is no central worker, dispatch queue or scheduled settlement workflow.
+The backend trusts the evidence sent by the authenticated workflow, as requested for this POC. It calls the selected AI provider and processes funding/reservations/payment attempts synchronously. There is no central worker, dispatch queue or scheduled settlement workflow.
 
 ## 2. Sponsor tracks
 
@@ -130,7 +130,34 @@ The active `.github/workflows/post-merge.yml` is already installed. It runs when
 
 The repository still needs to be registered and funded in Hugo before merging your demo PR. Pushing directly to the default branch does not trigger this PR-merge workflow.
 
-## 6. Get the 0G inference key
+## 6. Choose your AI provider: 0G or OpenAI
+
+Set `AI_PROVIDER` in `app/.env.local` and in Vercel Environment Variables. Both providers are supported; each evaluation calls only the selected provider, with no automatic fallback or duplicate call.
+
+### Use OpenAI
+
+1. [Open the API dashboard](https://platform.openai.com/) and [create an API key](https://platform.openai.com/api-keys).
+2. Configure:
+
+   ```dotenv
+   AI_PROVIDER=openai
+   OPENAI_API_KEY=YOUR_REAL_OPENAI_API_KEY
+   OPENAI_MODEL=gpt-4.1-mini
+   ```
+
+3. Restart local development or redeploy Vercel after changing these values. The 0G key/model are not required in this mode. You can keep both sets of credentials configured for later switching.
+
+Use a model available to your account that supports Chat Completions and JSON output. The example model is documented [here](https://developers.openai.com/api/docs/models/gpt-4.1-mini); the implementation uses the [Chat Completions API](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create). OpenAI API usage consumes your account's available credits/billing and is not promised free. Selecting it is an explicit alternative to 0G, not evidence of a 0G sponsor integration.
+
+### Use 0G
+
+```dotenv
+AI_PROVIDER=0g
+OG_API_KEY=YOUR_REAL_0G_API_KEY
+OG_MODEL=YOUR_AVAILABLE_0G_CHAT_MODEL_ID
+```
+
+Omitting `AI_PROVIDER` defaults to `0g` for compatibility. Only `0g` and `openai` are accepted. Provider, actual model and request ID are saved in evaluation JSON. Existing evaluations are reused: switching providers affects new evaluations, not previously evaluated PRs or reserved payouts.
 
 1. Open [Private Computer](https://pc.0g.ai/) and sign in.
 2. Open its [API keys dashboard](https://pc.0g.ai/dashboard/api-keys) and create a key.
@@ -138,7 +165,7 @@ The repository still needs to be registered and funded in Hugo before merging yo
 4. Open the [model catalog](https://pc.0g.ai/models), choose an available text/chat model, and copy its **actual model ID** into `OG_MODEL`.
 5. Check that your account has actual free promotional/event credits. Do not enable billing, top up, auto-recharge or purchase staked tokens. 0G may grant promotional credits, but does not guarantee them for every account. If none are available, stop here and obtain sponsor credits; real evaluation cannot run at zero spend until then.
 
-The implementation uses the OpenAI-compatible endpoint `https://router-api.0g.ai/v1`. It is fixed in `src/server/evaluation.ts`; setting another `OG_BASE_URL` does not change this implementation. [Official 0G overview](https://docs.0g.ai/developer-hub/building-on-0g/compute-network/overview).
+The 0G configuration uses `https://router-api.0g.ai/v1`; OpenAI uses `https://api.openai.com/v1`. No custom base URL is needed. [Official 0G overview](https://docs.0g.ai/developer-hub/building-on-0g/compute-network/overview).
 
 ## 7. thirdweb contributor wallets
 
@@ -185,8 +212,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_PUBLIC_KEY
 SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVER_KEY
 GITHUB_READ_TOKEN=YOUR_REGISTRATION_TOKEN
 MERGE_TRIGGER_SECRET=YOUR_RANDOM_SHARED_SECRET
+AI_PROVIDER=0g
 OG_API_KEY=YOUR_0G_KEY
 OG_MODEL=ACTUAL_CHAT_MODEL_ID
+# Or set AI_PROVIDER=openai and provide OPENAI_API_KEY / OPENAI_MODEL instead.
 NEXT_PUBLIC_THIRDWEB_CLIENT_ID=YOUR_THIRDWEB_CLIENT_ID
 THIRDWEB_SECRET_KEY=YOUR_THIRDWEB_SECRET
 NEXT_PUBLIC_ARC_RPC_URL=https://rpc.testnet.arc.io
@@ -341,7 +370,7 @@ A simulation makes real network calls. Live decentralized CRE deployment is not 
 | Local `app/cre/.env` | CRE report token and optional real CRE API key |
 | Browser wallet | Owner account; never upload its private key to Vercel |
 
-Only values prefixed `NEXT_PUBLIC_` may reach the browser. No payout signer, service-role key, thirdweb secret or 0G key belongs in GitHub's source code or public variables. `ALLOW_DEMO_FIXTURES` and `OG_BASE_URL` in the example file do not enable dummy data or change the current evaluator endpoint.
+Only values prefixed `NEXT_PUBLIC_` may reach the browser. No payout signer, service-role key, thirdweb secret or 0G key belongs in GitHub's source code or public variables. `ALLOW_DEMO_FIXTURES` does not enable dummy data. The AI endpoint is determined by `AI_PROVIDER`; an old `OG_BASE_URL` value has no effect.
 
 ## 15. Fast troubleshooting
 

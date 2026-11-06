@@ -30,3 +30,17 @@ export function appOrigin() {
 export function secret(name: string) {
   return z.string().min(32).parse(required(name));
 }
+
+export function evaluationConfig() {
+  const provider = process.env.AI_PROVIDER ?? '0g';
+  if (provider !== '0g' && provider !== 'openai') {
+    throw new AppError(503, 'INVALID_AI_PROVIDER', 'AI_PROVIDER must be 0g or openai');
+  }
+  const openai = provider === 'openai';
+  return {
+    provider,
+    baseURL: openai ? 'https://api.openai.com/v1' : 'https://router-api.0g.ai/v1',
+    apiKey: required(openai ? 'OPENAI_API_KEY' : 'OG_API_KEY'),
+    model: required(openai ? 'OPENAI_MODEL' : 'OG_MODEL'),
+  };
+}

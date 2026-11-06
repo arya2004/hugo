@@ -2,7 +2,7 @@ import 'server-only';
 import OpenAI from 'openai';
 import type { MergePayload } from '../lib/merge-payload';
 import { hash, validateScores } from '../lib/core';
-import { required } from './env';
+import { evaluationConfig } from './env';
 import { db, query, rpc } from './db';
 
 export async function evaluateMerge(merge: any, payload: MergePayload) {
@@ -17,16 +17,18 @@ export async function evaluateMerge(merge: any, payload: MergePayload) {
     evidenceHash: hash(payload),
     evidenceKeys: payload.sources.map((source) => source.key),
   };
+  const config = evaluationConfig();
   const client = new OpenAI({
-    baseURL: 'https://router-api.0g.ai/v1',
-    apiKey: required('OG_API_KEY'),
+    baseURL: config.baseURL,
+    apiKey: config.apiKey,
     maxRetries: 0,
     timeout: 120000,
   });
   const result = await client.chat.completions.create({
-    model: required('OG_MODEL'),
-    temperature: 0,
-    max_tokens: 6000,
+    model: config.model,
+    ...(config.provider === 'openai'
+      ? { max_completion_tokens: 6000, response_format: { type: 'json_object' as const } }
+      : { temperature: 0, max_tokens: 6000 }),
     messages: [
       {
         role: 'system',
@@ -51,6 +53,7 @@ export async function evaluateMerge(merge: any, payload: MergePayload) {
   );
   const evaluation = {
     version: 'poc-eval-v1',
+    provider: config.provider,
     mergeSha: e.mergeSha,
     evidenceHash: e.evidenceHash,
     model: result.model,
