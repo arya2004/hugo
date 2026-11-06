@@ -369,7 +369,7 @@ CRE reads your hosted report and Arc treasury. It is a separate verification dem
 1. [Create/log in to a Chainlink account](https://app.chain.link/cre/discover).
 2. Follow the [official CLI installer](https://docs.chain.link/cre/getting-started/cli-installation/macos-linux), then run `cre login`.
 3. In Vercel, add `CRE_EXTERNAL_REPORT_TOKEN` using a separate long random value and redeploy.
-4. Copy `app/cre/.env.example` to `app/cre/.env`. Set the same `CRE_EXTERNAL_REPORT_TOKEN`. If using `cre login`, remove the placeholder `CRE_API_KEY` line. Only set a real CLI API key if that is your chosen authentication method.
+4. Copy `app/cre/.env.example` to `app/cre/.env`. Set the same `CRE_EXTERNAL_REPORT_TOKEN`. Leave `CRE_API_KEY` commented out when using `cre login`. A placeholder or expired API key overrides browser login and causes `unauthorized: invalid token`; remove it locally and rerun. Vercel environment changes do not fix local CLI credentials. Only set a real CLI API key if that is your chosen authentication method.
 5. Find a confirmed reservation UUID in Supabase's `merge_reservations` table, or the merge API's `rewardId`. It must have status `RESERVED` or `SETTLED`.
 6. Edit `app/cre/workflow/config.staging.json`:
 

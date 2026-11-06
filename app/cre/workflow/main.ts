@@ -20,8 +20,8 @@ import {
 import { z } from 'zod';
 const configSchema = z.object({
   schedule: z.string(),
-  reportUrl: z.url(),
-  expectedOrigin: z.url(),
+  reportUrl: z.string().regex(/^https:\/\/[^/?#\s]+\/[^?#\s]*$/),
+  expectedOrigin: z.string().regex(/^https:\/\/[^/?#\s]+$/),
   treasuryAddress: z.string().regex(/^0x[\da-fA-F]{40}$/),
 });
 type Config = z.infer<typeof configSchema>;
@@ -43,12 +43,11 @@ const abi = parseAbi([
   'function fundingAt(uint64) view returns(bool)',
 ]);
 function fetchReport(sender: HTTPSendRequester, config: Config, token: string): string {
-  const url = new URL(config.reportUrl);
-  if (url.protocol !== 'https:' || url.origin !== config.expectedOrigin || url.search)
+  if (!config.reportUrl.startsWith(`${config.expectedOrigin}/`))
     throw Error('Expected HTTPS origin required');
   const response = sender
     .sendRequest({
-      url: url.href,
+      url: config.reportUrl,
       method: 'GET',
       headers: { Authorization: `Bearer ${token}` },
       cacheSettings: { store: true, maxAge: '30s' },
@@ -155,7 +154,7 @@ function initWorkflow(config: Config) {
 }
 export async function main() {
   const runner = await Runner.newRunner<Config>({
-    configParser: (config) => configSchema.parse(config),
+    configSchema,
   });
   await runner.run(initWorkflow);
 }

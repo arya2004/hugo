@@ -1,1 +1,6 @@
-{"schedule":"0 */10 * * * *","reportUrl":"https://REPLACE_WITH_DEPLOYED_APP/api/cre/report/REPLACE_WITH_EPOCH_UUID","expectedOrigin":"https://REPLACE_WITH_DEPLOYED_APP","treasuryAddress":"REPLACE_WITH_DEPLOYED_ARC_TREASURY"}
+{
+  "schedule": "0 */10 * * * *",
+  "reportUrl": "https://hugo-three-amber.vercel.app/api/cre/report/1fbe33a9-49fa-4ff8-a96f-d6c40b573719",
+  "expectedOrigin": "https://hugo-three-amber.vercel.app",
+  "treasuryAddress": "0xeea6446c0559f631692ab6ad09b5ee2f2cd642c8"
+}
