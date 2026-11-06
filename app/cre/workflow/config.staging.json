@@ -1,0 +1,1 @@
+{"schedule":"0 */10 * * * *","reportUrl":"https://REPLACE_WITH_DEPLOYED_APP/api/cre/report/REPLACE_WITH_EPOCH_UUID","expectedOrigin":"https://REPLACE_WITH_DEPLOYED_APP","treasuryAddress":"REPLACE_WITH_DEPLOYED_ARC_TREASURY"}

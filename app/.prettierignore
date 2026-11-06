@@ -1,0 +1,14 @@
+node_modules/
+.next/
+artifacts/
+coverage/
+.tools/
+src/lib/generated/
+next-env.d.ts
+package-lock.json
+cre/workflow/package-lock.json
+cre/workflow/*.js
+docs/evidence/
+cre/evidence/
+*.tsbuildinfo
+*.wasm

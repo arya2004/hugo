@@ -1,0 +1,3 @@
+export const ARC_CHAIN_ID = 5042002;
+
+export const USDC = '0x3600000000000000000000000000000000000000' as const;

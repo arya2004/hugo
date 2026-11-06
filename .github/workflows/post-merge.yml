@@ -1,0 +1,60 @@
+name: Hugo — evaluate merged PR
+on:
+  pull_request_target:
+    types: [closed]
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+jobs:
+  payout:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Collect contribution details and call Hugo synchronously
+        uses: actions/github-script@v7
+        env:
+          API_URL: ${{ secrets.POC_API_URL }}
+          API_SECRET: ${{ secrets.POC_MERGE_TRIGGER_SECRET }}
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const repo = context.repo;
+            const params = { ...repo, pull_number: pr.number, per_page: 100 };
+            const [files, commits, reviews, checks] = await Promise.all([
+              github.paginate(github.rest.pulls.listFiles, params),
+              github.paginate(github.rest.pulls.listCommits, params),
+              github.paginate(github.rest.pulls.listReviews, params),
+              github.paginate(github.rest.checks.listForRef, { ...repo, ref: pr.merge_commit_sha, per_page: 100 }),
+            ]);
+            const roster = new Map();
+            function add(user, role) {
+              if (user?.type === 'User' && roster.get(String(user.id))?.role !== 'CONTRIBUTOR') {
+                roster.set(String(user.id), { providerUserId: String(user.id), role });
+              }
+            }
+            add(pr.user, 'CONTRIBUTOR');
+            commits.forEach(c => add(c.author, 'CONTRIBUTOR'));
+            reviews.forEach(r => add(r.user, 'REVIEWER_ONLY'));
+            const payload = {
+              provider: 'github', repository: `${repo.owner}/${repo.repo}`,
+              repositoryId: String(context.payload.repository.id), prNumber: pr.number,
+              mergeSha: pr.merge_commit_sha, mergedAt: pr.merged_at,
+              roster: [...roster.values()],
+              sources: [
+                { key: `pr:${pr.number}`, data: { title: pr.title, body: pr.body, authorId: String(pr.user.id) } },
+                ...files.map(f => ({ key: `file:${f.filename}`, data: { filename: f.filename, patch: f.patch, status: f.status } })),
+                ...commits.map(c => ({ key: `commit:${c.sha}`, data: { authorId: c.author ? String(c.author.id) : null, message: c.commit.message } })),
+                ...reviews.map(r => ({ key: `review:${r.id}`, data: { authorId: String(r.user.id), body: r.body, state: r.state } })),
+                ...checks.map(c => ({ key: `check:${c.id}`, data: { name: c.name, conclusion: c.conclusion } })),
+              ],
+            };
+            const response = await fetch(`${process.env.API_URL.replace(/\/$/, '')}/api/merge/github`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.API_SECRET}` },
+              body: JSON.stringify(payload),
+              signal: AbortSignal.timeout(600000),
+            });
+            const result = await response.text();
+            if (!response.ok) throw new Error(`Hugo API ${response.status}: ${result}`);
+            core.info(result);

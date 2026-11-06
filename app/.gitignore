@@ -1,0 +1,19 @@
+node_modules/
+.next/
+.env*
+!.env.example
+*.tsbuildinfo
+coverage/
+artifacts/
+.tools/
+cre/.env
+cre/secrets.local.yaml
+*.wasm
+cre/workflow/*.js
+
+# Personal setup notes and local tooling
+SETUP.local.md
+.DS_Store
+.vscode/
+docs/evidence/
+cre/evidence/
