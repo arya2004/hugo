@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
-import { createThirdwebClient, defineChain } from 'thirdweb';
+import { createThirdwebClient, defineChain, type ThirdwebClient } from 'thirdweb';
+import type { Account } from 'thirdweb/wallets';
+import { WalletTransfer } from './wallet-transfer';
 import { inAppWallet } from 'thirdweb/wallets/in-app';
 import { api, money } from './client';
 
@@ -11,6 +13,8 @@ type Claim = {
 };
 
 export function ContributorClaims() {
+  const [connection, setConnection] = useState<{ account: Account; client: ThirdwebClient }>();
+  const [refreshVersion, setRefreshVersion] = useState(0);
   const [claims, setClaims] = useState<Claim[]>();
   const [wallet, setWallet] = useState('');
   const [status, setStatus] = useState('');
@@ -20,6 +24,7 @@ export function ContributorClaims() {
     const result = await api('contributor/allocations');
     setClaims(result.allocations);
     setWallet(result.wallet);
+    setRefreshVersion((value) => value + 1);
   }
 
   async function signIn() {
@@ -30,12 +35,15 @@ export function ContributorClaims() {
         if (!clientId) {
           throw Error('Configure the thirdweb client ID to enable GitHub login');
         }
+        const client = createThirdwebClient({ clientId });
         const embedded = inAppWallet();
         const account = await embedded.connect({
-          client: createThirdwebClient({ clientId }),
+          client,
           chain: defineChain(5042002),
           strategy: 'github',
         });
+        setConnection({ account, client });
+        setWallet(account.address);
         const challenge = await api('contributor/challenge', {
           address: account.address,
         });
@@ -106,6 +114,14 @@ export function ContributorClaims() {
         <p>No unclaimed, confirmed rewards for this GitHub account.</p>
       )}
       <p role="status">{status}</p>
+      {connection && (
+        <WalletTransfer
+          key={connection.account.address}
+          account={connection.account}
+          client={connection.client}
+          refreshVersion={refreshVersion}
+        />
+      )}
     </section>
   );
 }
