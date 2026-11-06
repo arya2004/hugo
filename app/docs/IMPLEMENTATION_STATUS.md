@@ -34,3 +34,7 @@ Removed Hugo’s active post-merge workflow and moved it to `examples/github/pos
 ## POC repository ownership assumption
 
 Registration now assumes the signed-in registrant owns the public repository. Removed GitHub collaborator/admin verification and the PAT-based GitHub helper. Repository identity/name come from the public metadata endpoint without authentication. Removed GITHUB_READ_TOKEN from env setup and README. App owner login/wallet binding and contributor authorization remain.
+
+## Arkiv partial-publication fix
+
+Live database inspection confirmed the Program entity/transaction succeeded while the Contribution remained pending. Reproduced the exact cause offline with SDK 1.0.1: a 133-byte joined transaction reference exceeds Arkiv str’s 128-byte limit. Publisher now stores one complete confirmed payout hash, falling back to reservation hash, without changing the v2 schema or republishing the completed Program. Failed attempts release their lease; no-ready responses distinguish a locked queue from an empty queue. CLI prints the target, queue status and error request ID/success count. Local lint/typecheck/tests pass; fixed publisher has not been deployed or sent a new Arkiv transaction.

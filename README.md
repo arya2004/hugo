@@ -220,6 +220,8 @@ The owner needs funds to deploy/donate. The backend needs funds for transaction 
 8. Wait for confirmation. Hugo saves the repository/treasury association and opens the project.
 9. Copy the displayed **funding address** and save its [Arc explorer](https://explorer.testnet.arc.io/) link.
 
+**About `NEXT_PUBLIC_TREASURY_ADDRESS`:** this is only an optional fallback for generic donation UI. Normal funding, reservations and claims use the treasury saved per project in Supabase. You can leave the variable unset. If you want to set it, copy the project’s actual funding address after registration; it is not your owner/backend wallet and not the USDC token address. A project that has already been funded and paid rewards already has a deployed treasury.
+
 You do not need to deploy a contract separately in Remix. Hugo uses the generated artifact from `app/contracts/ContributionTreasury.sol` and validates the exact deployment. If you change the contract, run `npm run compile:project` from `app/`, commit the updated artifact and redeploy Hugo before registration.
 
 ### 3.5 Put reward funds into the treasury
