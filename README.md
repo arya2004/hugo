@@ -16,7 +16,6 @@ This is the only setup guide you need. Paths below are relative to the repositor
 | Vercel | [Sign up](https://vercel.com/signup) · [Log in](https://vercel.com/login) · [Import repository](https://vercel.com/new) · [Dashboard](https://vercel.com/dashboard) | Choose **Hobby**, for a personal/non-commercial POC. Stay within included usage; no Pro trial or custom-domain purchase. [Hobby terms and limits](https://vercel.com/docs/plans/hobby) |
 | GitHub | [Sign up](https://github.com/signup) · [Log in](https://github.com/login) · [New repository](https://github.com/new) | Public repo + existing standard `ubuntu-latest` runner. [Public-repo Actions usage](https://docs.github.com/en/actions/concepts/billing-and-usage) |
 | GitHub owner OAuth | [Create OAuth App](https://github.com/settings/applications/new) | Create the free OAuth application used by Supabase; no paid SSO required. |
-| GitHub token | [Create fine-grained token](https://github.com/settings/personal-access-tokens/new) | Repository registration token; a token is not a paid subscription. |
 | thirdweb | [Dashboard / sign in](https://thirdweb.com/dashboard) | Use standard GitHub embedded-wallet authentication and the free wallet allowance only. The pricing page lists the first 1,000 wallets free, alongside paid subscriptions; do not assume every API/add-on is free. Confirm your required access in the dashboard before proceeding. [Pricing](https://thirdweb.com/pricing) |
 | 0G | [Console / sign in](https://pc.0g.ai/) · [API keys](https://pc.0g.ai/dashboard/api-keys) · [Models](https://pc.0g.ai/models) | Use only an actual free promotional/event credit grant. No paid top-up, auto-recharge or staking purchase. If no grant exists, real AI evaluation is blocked under the zero-spend requirement. [Credit policy](https://pc.testnet.0g.ai/terms) |
 | Arc Studio | [Open Studio / sign in](https://studio.arc.io/) | Use available free/event access; do not purchase a Studio plan or credits. Account entitlements must be checked in Studio. |
@@ -101,13 +100,11 @@ Edit `.env.local` with the values below. Never commit real secrets. Vercel will 
 
 Owner login uses Supabase; contributor login uses thirdweb. Official reference: [Supabase GitHub login setup](https://supabase.com/docs/guides/auth/social-sign-in/auth-github).
 
-## 5. GitHub token and workflow secrets
+## 5. GitHub workflow secret — no PAT required
 
-### Backend registration token
+For this POC, **Hugo assumes the signed-in person registering a repository is its owner**. It does not check GitHub admin/collaborator permissions. Public repository metadata is fetched without a token to obtain the numeric repository ID and name. No personal access token or `GITHUB_READ_TOKEN` is needed.
 
-In GitHub **Settings → Developer settings → Personal access tokens → Fine-grained tokens**, create a token scoped to the repository you will register. Grant repository **Administration: read** and **Metadata: read** so the backend can check collaborator admin permission during registration. Organization repositories may require organization approval.
-
-Set it as backend `GITHUB_READ_TOKEN`. It is used for owner registration, not backend re-verification of post-merge evidence. Never put this token into browser variables.
+Owner sign-in and wallet binding still identify the project's owner inside Hugo. Contributor login remains separate. GitHub supplies the post-merge workflow's read token automatically.
 
 ### Shared post-merge secret
 
@@ -210,7 +207,6 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_PUBLIC_KEY
 SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVER_KEY
-GITHUB_READ_TOKEN=YOUR_REGISTRATION_TOKEN
 MERGE_TRIGGER_SECRET=YOUR_RANDOM_SHARED_SECRET
 AI_PROVIDER=0g
 OG_API_KEY=YOUR_0G_KEY
@@ -370,14 +366,14 @@ A simulation makes real network calls. Live decentralized CRE deployment is not 
 | Local `app/cre/.env` | CRE report token and optional real CRE API key |
 | Browser wallet | Owner account; never upload its private key to Vercel |
 
-Only values prefixed `NEXT_PUBLIC_` may reach the browser. No payout signer, service-role key, thirdweb secret or 0G key belongs in GitHub's source code or public variables. `ALLOW_DEMO_FIXTURES` does not enable dummy data. The AI endpoint is determined by `AI_PROVIDER`; an old `OG_BASE_URL` value has no effect.
+Only values prefixed `NEXT_PUBLIC_` may reach the browser. No payout signer, service-role key, thirdweb secret or 0G key belongs in GitHub's source code or public variables. The AI endpoint is determined by `AI_PROVIDER`. Arc chain ID and USDC address are code constants, so no environment settings are needed for them. Set the CRE report URL in `app/cre/workflow/config.staging.json`, and CLI credentials only in `app/cre/.env`.
 
 ## 15. Fast troubleshooting
 
 | Symptom | What to check |
 |---|---|
 | Owner login fails | Supabase GitHub provider credentials, Supabase callback in GitHub OAuth App, app callback in Supabase redirect allowlist, exact app origin |
-| Repository registration denied | Public repository, signed-in user is its admin, backend token can read collaborator permissions, organization token approval |
+| Repository registration unavailable | Correct public `OWNER/REPO`, accessible GitHub API; ownership is assumed and no PAT is needed |
 | Contract deployment rejected | Arc chain 5042002, funded owner, owner differs from backend signer, current artifact and matching deployed app build |
 | Reservation/payment cannot send | Backend signer has Arc testnet gas; project was funded through `fund`; signer key matches the treasury's signer |
 | No reward | Funding was active at supplied merge time, deposit occurred before merge, 0G returned eligible positive scores, sufficient available funds |

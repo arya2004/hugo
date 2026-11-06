@@ -30,3 +30,7 @@ Removed redundant blueprint/archive/setup documents, diagnostic network-smoke sc
 ## Separate integration showcase
 
 Removed Hugo’s active post-merge workflow and moved it to `examples/github/post-merge.yml` with connection instructions. The sibling todo-demo repository retains its active workflow. Updated root README so registration, secrets and demo merges target the todo repository. No application runtime change or live payout occurred.
+
+## POC repository ownership assumption
+
+Registration now assumes the signed-in registrant owns the public repository. Removed GitHub collaborator/admin verification and the PAT-based GitHub helper. Repository identity/name come from the public metadata endpoint without authentication. Removed GITHUB_READ_TOKEN from env setup and README. App owner login/wallet binding and contributor authorization remain.

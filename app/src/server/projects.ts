@@ -7,7 +7,6 @@ import { repositoryKey } from '../lib/project-contract';
 import { USDC } from '../lib/contracts';
 import artifact from '../lib/generated/project-treasury.json';
 import { db, one, query, rpc } from './db';
-import { github } from './github';
 import { AppError, required } from './env';
 import { arc } from './arc';
 import { projectState } from './project-chain';
@@ -15,30 +14,21 @@ import { linked } from './auth';
 
 type Principal = { authUserId: string; githubUserId: string };
 
-export async function adminRepository(repository: string, principal: Principal) {
+// POC: the signed-in registrant is assumed to own the repository.
+async function repositoryMetadata(repository: string) {
   fullName.parse(repository);
-  const repo = await (await github(`/repos/${repository}`)).json();
-  const user = await (await github(`/user/${principal.githubUserId}`)).json();
-  if (String(user.id) !== principal.githubUserId || !user.login) {
+  const response = await fetch(`https://api.github.com/repos/${repository}`, {
+    headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'Hugo' },
+    cache: 'no-store',
+  });
+  if (!response.ok) {
     throw new AppError(
-      403,
-      'IDENTITY_MISMATCH',
-      'GitHub identity could not be confirmed',
+      422,
+      'REPOSITORY_UNAVAILABLE',
+      'Enter an accessible public GitHub repository',
     );
   }
-  const permission = await (
-    await github(
-      `/repos/${repository}/collaborators/${encodeURIComponent(user.login)}/permission`,
-    )
-  ).json();
-  if (repo.private || permission.permission !== 'admin') {
-    throw new AppError(
-      403,
-      'ADMIN_REQUIRED',
-      'Use a supported GitHub repository where you have admin access',
-    );
-  }
-  return repo;
+  return response.json();
 }
 
 function signer() {
@@ -47,12 +37,8 @@ function signer() {
   ).address.toLowerCase();
 }
 
-export async function prepareProject(
-  repository: string,
-  maxRewardMicro: string,
-  principal: Principal,
-) {
-  const repo = await adminRepository(repository, principal);
+export async function prepareProject(repository: string, maxRewardMicro: string) {
+  const repo = await repositoryMetadata(repository);
   const existing = await query(
     db()
       .from('repositories')
@@ -106,7 +92,7 @@ export async function registerProject(
   },
   principal: Principal,
 ) {
-  const repo = await adminRepository(input.repository, principal);
+  const repo = await repositoryMetadata(input.repository);
   await linked(principal.authUserId, input.ownerWallet);
   const client = arc();
   if ((await client.getChainId()) !== 5042002) {

@@ -288,7 +288,7 @@ async function route(req: Request) {
         })
         .strict(),
     );
-    return prepareProject(input.repository, input.maxRewardMicro, p);
+    return prepareProject(input.repository, input.maxRewardMicro);
   }
   if (!get && key === 'projects') {
     const input = await body(
