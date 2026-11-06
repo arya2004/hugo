@@ -1,345 +1,374 @@
-# Hugo — complete setup and deployment README
+# Hugo — setup and demo guide
 
-This is the only setup guide you need. Paths below are relative to the repository root unless a command first enters `app/`.
+Your app: **https://hugo-three-amber.vercel.app**
 
-**Current state:** integration code exists, but no hosted app, deployed treasury, live inference, Arkiv write or successful CRE simulation is supplied. Use testnet assets only. This README is included in the repository; keep actual secrets in local environment files and hosting settings.
+Follow the steps in order. **Finish steps 1–5 before starting Arkiv or CRE.** No other docs are needed to get started.
 
-## Start here: free plans and direct links
+## First: Arc and Arkiv are different
 
-**Use Supabase Free, Vercel Hobby, a public GitHub repository and faucet-funded testnet wallets. Do not select paid upgrades or a Pro trial.** Use the included `*.vercel.app` domain rather than buying a domain. No paid database, paid RPC, email service, VPS, thirdweb gas sponsorship or production CRE deployment is required by Hugo.
-
-**Important limitation:** a completely free end-to-end run is not guaranteed with the current required integrations. 0G inference needs usable credits; promotional credits are conditional, not an assured recurring free tier. thirdweb advertises a free wallet allowance, but access to the required GitHub wallet/profile API must be available on your account without a subscription. Arc Studio/CRE account access must also be available without a paid upgrade. If a service asks for payment, stop and request event/sponsor access instead of paying. This guide does not silently substitute fake inference or a different provider.
-
-| Service | Open this page directly | Free-only choice / limit |
+| | Arc | Arkiv |
 |---|---|---|
-| Supabase | [Sign up](https://supabase.com/dashboard/sign-up) · [Log in](https://supabase.com/dashboard/sign-in) · [Projects](https://supabase.com/dashboard/projects) | Choose **Free** organization/project. GitHub social OAuth is included; published allowance: 50,000 monthly active users, 500 MB database. Free projects can pause after a week of inactivity; resume before the demo. [Pricing](https://supabase.com/pricing) |
-| Vercel | [Sign up](https://vercel.com/signup) · [Log in](https://vercel.com/login) · [Import repository](https://vercel.com/new) · [Dashboard](https://vercel.com/dashboard) | Choose **Hobby**, for a personal/non-commercial POC. Stay within included usage; no Pro trial or custom-domain purchase. [Hobby terms and limits](https://vercel.com/docs/plans/hobby) |
-| GitHub | [Sign up](https://github.com/signup) · [Log in](https://github.com/login) · [New repository](https://github.com/new) | Public repo + existing standard `ubuntu-latest` runner. [Public-repo Actions usage](https://docs.github.com/en/actions/concepts/billing-and-usage) |
-| GitHub owner OAuth | [Create OAuth App](https://github.com/settings/applications/new) | Create the free OAuth application used by Supabase; no paid SSO required. |
-| thirdweb | [Dashboard / sign in](https://thirdweb.com/dashboard) | Use standard GitHub embedded-wallet authentication and the free wallet allowance only. The pricing page lists the first 1,000 wallets free, alongside paid subscriptions; do not assume every API/add-on is free. Confirm your required access in the dashboard before proceeding. [Pricing](https://thirdweb.com/pricing) |
-| 0G | [Console / sign in](https://pc.0g.ai/) · [API keys](https://pc.0g.ai/dashboard/api-keys) · [Models](https://pc.0g.ai/models) | Use only an actual free promotional/event credit grant. No paid top-up, auto-recharge or staking purchase. If no grant exists, real AI evaluation is blocked under the zero-spend requirement. [Credit policy](https://pc.testnet.0g.ai/terms) |
-| Arc Studio | [Open Studio / sign in](https://studio.arc.io/) | Use available free/event access; do not purchase a Studio plan or credits. Account entitlements must be checked in Studio. |
-| Arc Testnet | [Get free test USDC](https://faucet.circle.com/) · [Explorer](https://explorer.testnet.arc.io/) | Select **Arc Testnet**, use the public RPC and faucet tokens only; never buy or bridge mainnet USDC for the demo. |
-| Arkiv | [Hub / connect wallet](https://hub.arkiv.network/) · [Access keys](https://hub.arkiv.network/access-keys) · [Free tGLM faucet](https://hub.arkiv.network/faucet) | Use Rabdi testnet, public/shared access and faucet tGLM; no paid dedicated infrastructure. [Access-key instructions](https://docs.arkiv.network/start-here/access-keys/) |
-| Chainlink CRE | [Account / sign in](https://app.chain.link/cre/discover) · [Install CLI](https://docs.chain.link/cre/getting-started/cli-installation/macos-linux) | Local CLI simulation only, using available free/event account access and public testnet RPC. Do not deploy a production CRE workflow or buy external API access. [Simulation overview](https://docs.chain.link/cre/overview) |
+| What Hugo uses it for | Holding funds and paying contributors | Publishing public contribution/settlement records |
+| Network used | Arc Testnet | Arkiv Rabdi |
+| Test token | Test USDC | tGLM |
+| What you deploy | A treasury smart contract, through Hugo | Nothing manually; Hugo creates data entities |
+| Where you see it | Hugo project page + Arc explorer | Hugo `/arkiv` page + Arkiv explorer |
+| When to set it up | Before your first rewarded PR | After the reward flow works |
 
-Supabase **dashboard login** (the links above) creates your developer account. Your app's **GitHub login** is configured later in section 4 and does not require Supabase Pro. GitHub login also avoids needing a paid email delivery service. [Supabase GitHub setup](https://supabase.com/docs/guides/auth/social-sign-in/auth-github).
+**Arc Studio** is a separate app-building tool associated with the Arc sponsor track. It is not Arkiv and it is not the treasury contract.
 
-### Open your project settings without searching
+The flow you are setting up is:
 
-After creating the accounts, save these links with your own identifiers substituted:
-
-- Supabase project: `https://supabase.com/dashboard/project/YOUR_PROJECT_REF` — open SQL Editor, Authentication and Project Settings here. Copy your project reference from this URL.
-- GitHub repository secrets: `https://github.com/YOUR_OWNER/YOUR_REPO/settings/secrets/actions`.
-- GitHub workflow runs: `https://github.com/YOUR_OWNER/YOUR_REPO/actions`.
-- Vercel project environment: `https://vercel.com/YOUR_SCOPE/YOUR_PROJECT/settings/environment-variables`.
-- Local owner login: [http://localhost:3000/admin](http://localhost:3000/admin).
-- Local contributor login: [http://localhost:3000/redeem](http://localhost:3000/redeem).
-
-These are templates, not already-created accounts or deployments. After hosting, replace the local origin with your actual `https://YOUR_APP.vercel.app` domain.
-
-## 1. What you are deploying
-
-- **Vercel:** Next.js frontend and API from `app/`.
-- **Supabase:** application database and GitHub owner login.
-- **Arc Testnet:** one treasury contract per registered repository.
-- **0G Private Computer or OpenAI:** selectable AI evaluation of contribution evidence.
-- **thirdweb:** contributors authenticate with GitHub and receive an embedded wallet.
-- **GitHub Actions:** the connected todo demo repository's post-merge workflow sends contribution details to your hosted API and waits for its response.
-- **Arkiv and CRE:** public attestations and an independent verification simulation; configure these after the core flow works.
-
-The backend trusts the evidence sent by the authenticated workflow, as requested for this POC. It calls the selected AI provider and processes funding/reservations/payment attempts synchronously. There is no central worker, dispatch queue or scheduled settlement workflow.
-
-## 2. Sponsor tracks
-
-These are the intended tracks, not claims that the project already qualifies:
-
-| Sponsor / intended track | Hugo integration | Evidence you must produce |
-|---|---|---|
-| Arc — Best Smart Contracts with Advanced Stablecoin Logic, In Arc Studio | Capped USDC treasury, funding controls, reservations and contributor payouts | Real Arc Studio project URL, demo of Studio, actual contract/funding/payment receipts and architecture diagram |
-| Arkiv — Build on Arkiv (from scratch), if your event category permits | Public eligibility and settlement attestations queried from `/arkiv` | Actual entity writes, live UI reads, issuer address and reproducible query; required criterion documents and license |
-| Chainlink — Best workflow with CRE | Workflow reads external Hugo report plus Arc contract state | Successful genuine CRE CLI simulation; compilation alone is insufficient |
-| 0G — technology used; prize fit must be checked separately | Real Private Computer inference | Actual model/request metadata and evaluation demo |
-
-Arc requires Studio as the starting point. Creating a Studio project after building elsewhere does not establish that requirement. thirdweb, Vercel and Supabase are supporting services; do not imply a selected sponsor track merely because their SDK is installed. Check the [official Mumbai prize requirements](https://ethglobal.com/events/mumbai/prizes) before submission.
-
-## 3. Accounts and tools
-
-Use the direct signup/login table above, or open these service dashboards:
-
-- [Supabase](https://supabase.com/dashboard)
-- [Vercel](https://vercel.com/new)
-- [0G Private Computer](https://pc.0g.ai/)
-- [thirdweb](https://thirdweb.com/dashboard)
-- [Arc Studio](https://studio.arc.io/)
-- [Arkiv Hub](https://hub.arkiv.network/) for attestations
-- [Chainlink CRE](https://app.chain.link/cre/discover) for simulation
-
-Install Node.js **24 LTS**, npm, Git and MetaMask or another supported browser EVM wallet. The project requires Node >=22.10. Use a public GitHub repository for the current POC; registration rejects private repositories.
-
-```sh
-cd app
-npm ci
-cp .env.example .env.local
+```text
+Todo PR merges
+  → its workflow sends contribution details to Hugo
+  → selected AI provider evaluates the work
+  → Arc treasury reserves reward shares and pays linked contributors
+  → you publish the public records to Arkiv
 ```
 
-Edit `.env.local` with the values below. Never commit real secrets. Vercel will need the same runtime values in its Environment Variables settings; it does not automatically receive your local file.
+The POC trusts the workflow's evidence. Processing runs synchronously in the API request. There is no central evaluator worker or scheduled settlement workflow.
 
-## 4. Supabase: database and owner GitHub login
+## 1. Prepare Supabase and login
 
-1. [Sign in to Supabase](https://supabase.com/dashboard/sign-in), choose a **Free** organization, and create a project from [your dashboard](https://supabase.com/dashboard/projects). Do not upgrade to Pro. Save its database password somewhere private.
-2. Open **SQL Editor**. Paste and run the entire `app/supabase/migrations/001_hugo.sql` file **once** on this fresh project. There is only one setup SQL file. It is not an upgrade script for old iterations.
-3. From the project's connection/API settings, copy:
-   - Project URL → `NEXT_PUBLIC_SUPABASE_URL`.
-   - Publishable or legacy anon key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-   - Server secret/service-role key → `SUPABASE_SERVICE_ROLE_KEY`.
-4. In Supabase **Authentication → Providers → GitHub**, enable GitHub and copy the callback URL shown there.
-5. In GitHub **Settings → Developer settings → OAuth Apps → New OAuth App**, set a name such as Hugo Owner Login, a homepage URL, and that **Supabase callback URL**, normally `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`.
-6. Copy the OAuth Client ID and generate a Client Secret. Put both into the Supabase GitHub provider settings. These are not the post-merge API secret or the GitHub read token.
-7. In Supabase **Authentication → URL Configuration**, set Site URL to your app origin and allow both `http://localhost:3000/auth/callback` and `https://YOUR_APP.vercel.app/auth/callback`. After deployment, make the hosted origin the Site URL.
+### 1.1 Open your existing project
 
-Owner login uses Supabase; contributor login uses thirdweb. Official reference: [Supabase GitHub login setup](https://supabase.com/docs/guides/auth/social-sign-in/auth-github).
+[Sign in to Supabase](https://supabase.com/dashboard/sign-in), then open [your project](https://supabase.com/dashboard/project/cugcgzgeevecgtratmrq).
 
-## 5. GitHub workflow secret — no PAT required
+Stay on the **Free** plan. GitHub social login is included; you do not need Pro or a paid email service. Free projects can pause after inactivity, so check that yours is running before the demo. [Pricing and limits](https://supabase.com/pricing).
 
-For this POC, **Hugo assumes the signed-in person registering a repository is its owner**. It does not check GitHub admin/collaborator permissions. Public repository metadata is fetched without a token to obtain the numeric repository ID and name. No personal access token or `GITHUB_READ_TOKEN` is needed.
+### 1.2 Check the database
 
-Owner sign-in and wallet binding still identify the project's owner inside Hugo. Contributor login remains separate. GitHub supplies the post-merge workflow's read token automatically.
+Open **SQL Editor**. If this is a fresh database that you have not initialized:
 
-### Shared post-merge secret
+1. Open [app/supabase/migrations/001_hugo.sql](app/supabase/migrations/001_hugo.sql).
+2. Copy the entire file into a new SQL Editor query.
+3. Click **Run**.
 
-Generate a random value locally:
+If you already ran it, **do not run it again**. In Table Editor, confirm tables such as `programs`, `repositories` and `merge_reservations` exist. This SQL is for a fresh POC database, not an upgrade of older iterations.
+
+### 1.3 Copy your keys
+
+Open **Project Settings → API Keys**. You need these for Vercel in step 2:
+
+- Project URL: `https://cugcgzgeevecgtratmrq.supabase.co`.
+- Public/publishable or legacy anon key.
+- Server secret/service-role key.
+
+Keep your actual keys private.
+
+### 1.4 Set the login redirects
+
+Open **Authentication → URL Configuration**.
+
+Set **Site URL** to:
+
+```text
+https://hugo-three-amber.vercel.app
+```
+
+Add both **Redirect URLs**, then save:
+
+```text
+https://hugo-three-amber.vercel.app/auth/callback
+http://localhost:3000/auth/callback
+```
+
+In **Authentication → Providers → GitHub**, keep GitHub enabled. Its Client ID and Client Secret come from your [GitHub OAuth App](https://github.com/settings/developers). If you have not created one, [create it here](https://github.com/settings/applications/new).
+
+The GitHub OAuth App's **Authorization callback URL** must be:
+
+```text
+https://cugcgzgeevecgtratmrq.supabase.co/auth/v1/callback
+```
+
+That URL stays on Supabase. Do not change it to the Vercel callback. The browser goes GitHub → Supabase → Hugo. [Official login instructions](https://supabase.com/docs/guides/auth/social-sign-in/auth-github).
+
+## 2. Configure and redeploy Vercel
+
+### 2.1 Open the right settings
+
+[Log in to Vercel](https://vercel.com/login) → open your Hugo project → **Settings → Environment Variables**.
+
+Use **Hobby**, not Pro or a Pro trial. Use the existing `vercel.app` domain. Hobby is intended for personal/non-commercial projects within its limits. [Plan details](https://vercel.com/docs/plans/hobby).
+
+If creating the project again: [Import repository](https://vercel.com/new), choose the Hugo repo, set **Root Directory = `app`**, framework **Next.js**, install command `npm ci`, build command `npm run build`, Node **24.x**.
+
+### 2.2 Add these Production variables
+
+For each entry, select **Production** and save. Copy existing secrets from your local `app/.env.local`; do not regenerate or reset working keys. Paste values without surrounding quotes.
+
+| Variable | What to enter |
+|---|---|
+| `NEXT_PUBLIC_APP_URL` | `https://hugo-three-amber.vercel.app` |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://cugcgzgeevecgtratmrq.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public/anon key from step 1 |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase server secret/service-role key from step 1 |
+| `MERGE_TRIGGER_SECRET` | Your existing shared post-merge secret |
+| `NEXT_PUBLIC_ARC_RPC_URL` | `https://rpc.testnet.arc.io` |
+| `PAYOUT_VOUCHER_SIGNER_KEY` | Private key of the separate **backend test wallet** described in step 3 |
+| `NEXT_PUBLIC_THIRDWEB_CLIENT_ID` | Your thirdweb Client ID |
+| `THIRDWEB_SECRET_KEY` | Secret Key from that same thirdweb project |
+
+Use one AI configuration:
+
+| OpenAI | Value |
+|---|---|
+| `AI_PROVIDER` | `openai` |
+| `OPENAI_API_KEY` | Your OpenAI API key |
+| `OPENAI_MODEL` | Your supported chat model, e.g. `gpt-4.1-mini` |
+
+[OpenAI API keys](https://platform.openai.com/api-keys) · [Example model documentation](https://developers.openai.com/api/docs/models/gpt-4.1-mini).
+
+Or use 0G:
+
+| 0G | Value |
+|---|---|
+| `AI_PROVIDER` | `0g` |
+| `OG_API_KEY` | Your 0G API key |
+| `OG_MODEL` | Actual available model ID |
+
+[0G console](https://pc.0g.ai/) · [0G API keys](https://pc.0g.ai/dashboard/api-keys) · [0G models](https://pc.0g.ai/models).
+
+Only the selected provider needs credentials. You can keep both sets and switch `AI_PROVIDER`. Existing evaluations are reused; switching affects new evaluations. Provider/model/request ID are recorded. OpenAI runs do not count as 0G integration evidence. AI inference requires usable account credits; a free allowance is not guaranteed. Do not enable paid billing if you intend a zero-spend demo.
+
+**Skip Arkiv and CRE variables for now.** They are listed later when you need them. No GitHub PAT is required. `NEXT_PUBLIC_TREASURY_ADDRESS` is not needed for normal project registration/funding.
+
+### 2.3 Configure thirdweb's production domain
+
+[Open thirdweb Dashboard](https://thirdweb.com/dashboard) → select your project → **Settings → Domain Restrictions / Allowed Domains**.
+
+1. Add `hugo-three-amber.vercel.app`.
+2. Keep your existing localhost entry.
+3. Enable GitHub authentication for in-app/embedded wallets.
+4. Save.
+
+The Client ID and Secret Key must belong to this project. Use available free access; confirm the required GitHub wallet/profile API is included without an upgrade. [Access restriction instructions](https://portal.thirdweb.com/account/api-keys/access).
+
+### 2.4 Redeploy
+
+Vercel project → **Deployments** → latest production deployment → **⋯ → Redeploy**. Wait for **Ready**.
+
+Environment changes need a new deployment; browser `NEXT_PUBLIC_` values are bundled at build time. Keep `NEXT_PUBLIC_APP_URL=http://localhost:3000` in your laptop's `.env.local` for local development, and the production origin in Vercel. [Environment variable instructions](https://vercel.com/docs/environment-variables/managing-environment-variables).
+
+### 2.5 Check access and health
+
+Open [production health](https://hugo-three-amber.vercel.app/api/health) in an incognito/private window. You should receive JSON with:
+
+```json
+{"data":{"db":"ok","arc":"ok","version":"0.2.0"}}
+```
+
+There will also be a request ID. If `db` is down, check the Production Supabase values, schema and project pause state. If `arc` is down, check the RPC URL.
+
+If you see a Vercel login page instead of JSON, open Vercel **Settings → Deployment Protection** and ensure the production domain is public. Preview deployments can stay protected. Keep Hugo's shared API secret. [Protection settings](https://vercel.com/docs/deployment-protection/methods-to-protect-deployments/vercel-authentication).
+
+Now open [owner login](https://hugo-three-amber.vercel.app/admin). Confirm you can reach the workspace. Health does not test AI, thirdweb, payments, Arkiv or CRE.
+
+## 3. Arc: prepare wallets and deploy the reward contract
+
+**Goal:** get an actual treasury funding address for the **todo demo repository**. All money movement happens on Arc Testnet.
+
+### 3.1 Make two test accounts
+
+In MetaMask or your browser wallet, create two separate accounts and name them:
+
+| Account | What it does | Where its private key belongs |
+|---|---|---|
+| `Hugo owner` | Deploys treasury, adds funds, starts/stops funding | In your browser wallet only |
+| `Hugo backend` | Sends reward reservations and payouts | `PAYOUT_VOUCHER_SIGNER_KEY` in Vercel and local env |
+
+Copy both **public addresses** somewhere so you can tell them apart. Export the private key of **only the disposable backend test account**, paste it into Vercel's `PAYOUT_VOUCHER_SIGNER_KEY`, and redeploy if that value changed. Use a `0x`-prefixed 32-byte private key, not a seed phrase.
+
+The owner and backend signer must be different accounts. Neither account is the treasury: the treasury address is created in step 3.4.
+
+### 3.2 Add Arc Testnet to the wallet
+
+Wallet → **Settings → Networks → Add a custom network**:
+
+| Field | Enter |
+|---|---|
+| Network name | Arc Testnet |
+| RPC | `https://rpc.testnet.arc.io` |
+| Chain ID | `5042002` |
+| Currency symbol | `USDC` |
+| Block explorer | `https://explorer.testnet.arc.io` |
+
+Save, then switch to **Arc Testnet**. Do not choose Arc Mainnet. [Official network settings](https://docs.arc.io/arc/references/connect-to-arc).
+
+### 3.3 Get free test funds for BOTH accounts
+
+1. Open [Circle faucet](https://faucet.circle.com/).
+2. Select **Arc Testnet**.
+3. Enter the public address of `Hugo owner` and request test USDC.
+4. Repeat for `Hugo backend`, subject to faucet limits.
+5. Wait until both accounts have test funds.
+
+The owner needs funds to deploy/donate. The backend needs funds for transaction gas. Funding only the owner is not enough. No Circle API key, paid RPC, mainnet USDC or real-money purchase is needed.
+
+### 3.4 Create the treasury through Hugo
+
+1. Open [Register repository](https://hugo-three-amber.vercel.app/admin/projects/new).
+2. Sign in with your owner GitHub account if prompted. For this POC, ownership is assumed; no GitHub PAT/admin check is required.
+3. Enter **`arya2004/hugo-todo-demo`**.
+4. Enter a permanent combined reward cap, e.g. **1 USDC per PR**. This is the total for all contributors to a PR, not an amount per contributor.
+5. Connect the `Hugo owner` wallet on Arc Testnet.
+6. Sign the wallet-binding message.
+7. Confirm the contract-deployment transaction when the wallet asks. Hugo supplies the USDC address, numeric repo key, backend signer address and cap.
+8. Wait for confirmation. Hugo saves the repository/treasury association and opens the project.
+9. Copy the displayed **funding address** and save its [Arc explorer](https://explorer.testnet.arc.io/) link.
+
+You do not need to deploy a contract separately in Remix. Hugo uses the generated artifact from `app/contracts/ContributionTreasury.sol` and validates the exact deployment. If you change the contract, run `npm run compile:project` from `app/`, commit the updated artifact and redeploy Hugo before registration.
+
+### 3.5 Put reward funds into the treasury
+
+On the project page:
+
+1. Keep `Hugo owner` connected.
+2. In **Add project funds**, enter a small test amount, e.g. **5 USDC**, leaving some in the wallet for gas.
+3. Confirm the USDC approval transaction.
+4. Confirm the separate funding transaction.
+5. Wait until **Available for rewards** reflects the deposit.
+6. Open **Funding controls → Start Funding** and confirm that transaction.
+7. Confirm funding is shown as active **before merging your PR**.
+
+Use the form, not a direct token transfer to the contract address: the contract's `fund` call updates its accounting. Donations alone do not activate funding. Stopping funding later does not cancel already reserved contributor rewards.
+
+The Arc USDC ERC-20 address is `0x3600000000000000000000000000000000000000`. Reward amounts use six decimals; native gas uses 18-decimal accounting. These are code/network settings, not additional keys you must buy.
+
+### 3.6 Where Arc Studio fits
+
+[Arc Studio](https://studio.arc.io/) is relevant to the Arc sponsor submission. The track requires Studio as the starting point and an actual shareable project URL/demo. Do not claim that requirement is satisfied by a later visit. Use available free/event access. Normal Hugo treasury deployment is the registration flow above; a differently compiled Studio/Remix contract is not automatically importable into Hugo.
+
+## 4. Connect the todo demo repository
+
+Open [todo repo Actions secrets](https://github.com/arya2004/hugo-todo-demo/settings/secrets/actions).
+
+Add these **repository secrets**:
+
+| Name | Value |
+|---|---|
+| `POC_API_URL` | `https://hugo-three-amber.vercel.app` |
+| `POC_MERGE_TRIGGER_SECRET` | Exact same value as Vercel's `MERGE_TRIGGER_SECRET` |
+
+Do not append `/api/merge/github` to the URL. The active workflow in the **todo repo** adds it. GitHub supplies its read token automatically. Hugo's own repository contains only the [integration example](examples/github/README.md), not an active payout workflow.
+
+## 5. Merge a PR and check the reward
+
+1. Make a real improvement on a branch in `hugo-todo-demo`, such as editing task titles.
+2. Open a GitHub PR, then merge it while funding is active.
+3. Open [todo repo Actions](https://github.com/arya2004/hugo-todo-demo/actions) → **Hugo — evaluate merged PR**.
+4. Wait for the API response. The backend runs the selected AI evaluation, saves scores, calculates shares and processes Arc reservations/payment attempts.
+5. Check the Hugo project reward status and actual Arc transaction links.
+
+For an **automatic payment**, the contributor must link their wallet beforehand through [Contributor login](https://hugo-three-amber.vercel.app/redeem). A thirdweb embedded wallet is created during login. A contributor who was unregistered at allocation gets a reserved share and can authenticate and claim later. Review-only participants get zero.
+
+A PR merge does not guarantee a reward. Current calculation:
+
+```text
+inflow = deposits in the 7 days before the supplied merge time
+daily = floor(inflow * 8000 / 70000)
+quality = highest eligible contributor score (0–100)
+reward = min(available funds, floor(min(daily, PR cap) * quality / 100))
+```
+
+Scores determine proportional shares. With 5 USDC recent funding and quality 80, the combined reward is about 0.457142 USDC before other constraints. Deposit before merging; a later donation does not increase a previously frozen allocation.
+
+Keep the demo PR small and use few recipients. This synchronous API requests a 300-second runtime, matching Vercel Hobby's documented Fluid Compute maximum. The workflow's ten-minute request timeout does not extend Vercel's limit. [Host duration limits](https://vercel.com/docs/functions/limitations).
+
+If a request times out, inspect Vercel logs and the recorded chain transactions before assuming no payment occurred. Rerunning the workflow reuses persisted work where present; there is no recovery cron.
+
+## 6. Arkiv: publish and view the public records
+
+**Do this after a real merge/reservation exists.** Arkiv does not pay contributors, hold USDC or replace your Arc treasury. You are publishing data records, not deploying another treasury.
+
+### 6.1 Create an Arkiv test account and fund it
+
+1. In your browser wallet, create a third disposable account named `Hugo Arkiv`.
+2. Copy its public address.
+3. Open [Arkiv Hub](https://hub.arkiv.network/) and connect that account.
+4. Open [Arkiv faucet](https://hub.arkiv.network/faucet) and request **tGLM for that same address**. Follow Hub's Rabdi network prompt if it asks to add/switch networks.
+5. Wait for the faucet funds. tGLM pays for Arkiv data writes; Arc USDC cannot fund this operation.
+
+Hugo's installed adapter targets **Rabdi**, chain ID **7794095**. Use the [Hub network page](https://hub.arkiv.network/networks) if you need the current wallet/RPC details. The app's SDK selects Rabdi itself; you do not need to paste a new Arkiv RPC into Hugo. [Arkiv Hub](https://hub.arkiv.network/) explains the faucet/write flow.
+
+### 6.2 Get an access key
+
+Open [Arkiv access keys](https://hub.arkiv.network/access-keys), connect/sign in as requested, and create a key. Copy the access-key value. Use free/shared testnet access; no paid dedicated node is needed. [Official key instructions](https://docs.arkiv.network/start-here/access-keys/).
+
+### 6.3 Add these Vercel Production values
+
+Vercel Hugo project → **Settings → Environment Variables**:
+
+| Variable | What to paste |
+|---|---|
+| `ARKIV_ACCESS_KEY` | Access key from step 6.2 |
+| `ARKIV_WRITER_PRIVATE_KEY` | Private key exported from disposable `Hugo Arkiv` account |
+| `ARKIV_ISSUER_ADDRESS` | Public address of that SAME `Hugo Arkiv` account |
+| `WORKER_API_SECRET` | A separate long random secret for publishing |
+
+Generate the publishing secret if you do not already have one:
 
 ```sh
 openssl rand -hex 32
 ```
 
-Copy it into backend `MERGE_TRIGGER_SECRET`.
+Copy it privately. Despite the older variable name, `WORKER_API_SECRET` now protects the manual publishing API; there is no AI worker. **Redeploy Hugo** after saving the values.
 
-In **the todo demo repository → Settings → Secrets and variables → Actions → New repository secret**, add:
+You now have three unrelated things: Arc treasury address, Arkiv issuer public address, and Arkiv access key. Do not swap them.
 
-| Actions secret | Value |
-|---|---|
-| `POC_API_URL` | Hosted app origin, e.g. `https://YOUR_APP.vercel.app` |
-| `POC_MERGE_TRIGGER_SECRET` | Exact same value as backend `MERGE_TRIGGER_SECRET` |
+### 6.4 Trigger publishing from your laptop
 
-The separate `hugo-todo-demo` repository has the active `.github/workflows/post-merge.yml`. Hugo itself has no active post-merge payout workflow. For another repository, copy [examples/github/post-merge.yml](examples/github/post-merge.yml) into its `.github/workflows/` folder; see the [integration example instructions](examples/github/README.md). The workflow collects contribution details using GitHub's automatic token and posts them to Hugo's `/api/merge/github`. No central worker or dispatch token is needed.
-
-The repository still needs to be registered and funded in Hugo before merging your demo PR. Pushing directly to the default branch does not trigger this PR-merge workflow.
-
-## 6. Choose your AI provider: 0G or OpenAI
-
-Set `AI_PROVIDER` in `app/.env.local` and in Vercel Environment Variables. Both providers are supported; each evaluation calls only the selected provider, with no automatic fallback or duplicate call.
-
-### Use OpenAI
-
-1. [Open the API dashboard](https://platform.openai.com/) and [create an API key](https://platform.openai.com/api-keys).
-2. Configure:
-
-   ```dotenv
-   AI_PROVIDER=openai
-   OPENAI_API_KEY=YOUR_REAL_OPENAI_API_KEY
-   OPENAI_MODEL=gpt-4.1-mini
-   ```
-
-3. Restart local development or redeploy Vercel after changing these values. The 0G key/model are not required in this mode. You can keep both sets of credentials configured for later switching.
-
-Use a model available to your account that supports Chat Completions and JSON output. The example model is documented [here](https://developers.openai.com/api/docs/models/gpt-4.1-mini); the implementation uses the [Chat Completions API](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create). OpenAI API usage consumes your account's available credits/billing and is not promised free. Selecting it is an explicit alternative to 0G, not evidence of a 0G sponsor integration.
-
-### Use 0G
+In `app/.env.local`, set:
 
 ```dotenv
-AI_PROVIDER=0g
-OG_API_KEY=YOUR_REAL_0G_API_KEY
-OG_MODEL=YOUR_AVAILABLE_0G_CHAT_MODEL_ID
+POC_APP_URL=https://hugo-three-amber.vercel.app
+WORKER_API_SECRET=THE_SAME_PUBLISHING_SECRET_YOU_PUT_IN_VERCEL
 ```
 
-Omitting `AI_PROVIDER` defaults to `0g` for compatibility. Only `0g` and `openai` are accepted. Provider, actual model and request ID are saved in evaluation JSON. Existing evaluations are reused: switching providers affects new evaluations, not previously evaluated PRs or reserved payouts.
-
-1. Open [Private Computer](https://pc.0g.ai/) and sign in.
-2. Open its [API keys dashboard](https://pc.0g.ai/dashboard/api-keys) and create a key.
-3. Set backend `OG_API_KEY` to that key.
-4. Open the [model catalog](https://pc.0g.ai/models), choose an available text/chat model, and copy its **actual model ID** into `OG_MODEL`.
-5. Check that your account has actual free promotional/event credits. Do not enable billing, top up, auto-recharge or purchase staked tokens. 0G may grant promotional credits, but does not guarantee them for every account. If none are available, stop here and obtain sponsor credits; real evaluation cannot run at zero spend until then.
-
-The 0G configuration uses `https://router-api.0g.ai/v1`; OpenAI uses `https://api.openai.com/v1`. No custom base URL is needed. [Official 0G overview](https://docs.0g.ai/developer-hub/building-on-0g/compute-network/overview).
-
-## 7. thirdweb contributor wallets
-
-1. In [thirdweb Dashboard](https://thirdweb.com/dashboard), create a project using available free access. Do not subscribe to Growth/Scale/Pro. Confirm standard GitHub authentication and the server profile API are available without upgrading; if not, request event access before proceeding.
-2. Copy its **Client ID** to `NEXT_PUBLIC_THIRDWEB_CLIENT_ID`.
-3. Copy the **Secret Key** from the same project to backend-only `THIRDWEB_SECRET_KEY`.
-4. Enable in-app/embedded wallets and GitHub as an authentication method. Complete any provider configuration the dashboard requests.
-5. Allow `localhost:3000` and your deployed domain in the project's allowed-domain settings.
-
-Hugo creates an embedded wallet when a contributor chooses GitHub login at `/redeem`. The backend gets that wallet's linked profile from thirdweb and requires a numeric GitHub ID. Usernames/emails are not accepted as the identity. If the live thirdweb profile does not expose the required ID, login will fail explicitly; do not replace it with an invented ID.
-
-A contributor linked before allocation can receive automatic payments. Otherwise the share stays reserved until they log in and claim. The backend signer pays transaction gas. [thirdweb API key documentation](https://portal.thirdweb.com/account/api-keys).
-
-## 8. Arc Testnet wallets and faucet
-
-Add this network to your browser wallet:
-
-| Setting | Value |
-|---|---|
-| Network | Arc Testnet |
-| RPC | `https://rpc.testnet.arc.io` |
-| Chain ID | `5042002` |
-| Native currency | `USDC` |
-| Explorer | `https://explorer.testnet.arc.io` |
-| USDC ERC-20 contract | `0x3600000000000000000000000000000000000000` |
-
-Use [Circle's faucet](https://faucet.circle.com/), select **Arc Testnet**, and request test funds. You do not need a Circle API key for this app's direct wallet/contract flow. Native gas accounting uses 18 decimals; the app's USDC token amounts use 6. [Official Arc connection details](https://docs.arc.io/arc/references/connect-to-arc).
-
-Prepare two different test-only wallet accounts:
-
-1. **Owner account:** connects in the browser, deploys the treasury, donates and starts/stops funding.
-2. **Backend signer account:** a separate account whose exported private key becomes `PAYOUT_VOUCHER_SIGNER_KEY` in `.env.local` and Vercel. Fund this address from the faucet too: it sends reservation and payout transactions.
-
-Do not use the owner address as the backend signer; contract deployment rejects that configuration. Export only a disposable test account's private key. Keep the owner key in your wallet; Hugo does not need it on the backend.
-
-## 9. Run locally, then deploy the app
-
-Set `NEXT_PUBLIC_APP_URL=http://localhost:3000` for local development. Core runtime values are:
-
-```dotenv
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_PUBLIC_KEY
-SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVER_KEY
-MERGE_TRIGGER_SECRET=YOUR_RANDOM_SHARED_SECRET
-AI_PROVIDER=0g
-OG_API_KEY=YOUR_0G_KEY
-OG_MODEL=ACTUAL_CHAT_MODEL_ID
-# Or set AI_PROVIDER=openai and provide OPENAI_API_KEY / OPENAI_MODEL instead.
-NEXT_PUBLIC_THIRDWEB_CLIENT_ID=YOUR_THIRDWEB_CLIENT_ID
-THIRDWEB_SECRET_KEY=YOUR_THIRDWEB_SECRET
-NEXT_PUBLIC_ARC_RPC_URL=https://rpc.testnet.arc.io
-PAYOUT_VOUCHER_SIGNER_KEY=YOUR_SEPARATE_TEST_ACCOUNT_PRIVATE_KEY
-```
-
-Replace every placeholder before using the relevant feature. Then:
+Then, from the Hugo repository root:
 
 ```sh
-npm run dev
+cd app
+node --env-file=.env.local --import tsx scripts/arkiv-sync.ts
 ```
 
-Open `http://localhost:3000/admin` and sign in with GitHub. There is no dummy-data mode.
+The script calls the hosted backend. The **backend** uses its Vercel Arkiv keys to publish queued records; the laptop does not need another wallet transaction prompt. It prints actual entity keys/transaction hashes for published records and stops when the queue is empty or twenty records were processed. Run again if needed.
 
-For the hosted app:
+No output can mean there is nothing queued; a configured key alone does not create contribution records. Ensure a project/merge exists first.
 
-1. Push the Hugo application repository to GitHub. Separately push the todo demo repository with its active `.github/workflows/post-merge.yml`.
-2. [Sign in to Vercel](https://vercel.com/login), choose **Hobby** for this personal POC, and [import the repository](https://vercel.com/new). Do not start a Pro trial. Set **Root Directory = `app`**, framework **Next.js**, install `npm ci`, build `npm run build`. Use Node 24.x.
-3. Add the core environment values above. Add Arkiv/CRE values from the next sections when using those features.
-4. Deploy once to obtain the domain. Set `NEXT_PUBLIC_APP_URL` to that exact `https://...` origin and redeploy. Public variables are bundled during build, so changes require redeployment.
-5. Update Supabase redirects and thirdweb allowed domains. Set GitHub Actions `POC_API_URL` to the hosted origin.
-6. Ensure the API is reachable by the workflow, without a Vercel deployment-protection login page blocking it.
-7. Visit `/api/health`. `db` and `arc` should be `ok` when configured. This endpoint does not prove 0G, thirdweb, Arkiv or CRE work.
+### 6.5 See the result
 
-The merge handler requests `maxDuration=300`. Vercel's documented Hobby limit with Fluid Compute is 300 seconds. The pipeline waits up to ten minutes, but that does not extend the server's five-minute limit. Use a small PR and few recipients for the synchronous POC demo. [Vercel duration limits](https://vercel.com/docs/functions/limitations).
+Open these direct links:
 
-## 10. Deploy the treasury contract on Arc Testnet
+- [Hugo public contribution records](https://hugo-three-amber.vercel.app/arkiv).
+- [Contribution records as JSON](https://hugo-three-amber.vercel.app/api/arkiv/contributions).
+- [Program records as JSON](https://hugo-three-amber.vercel.app/api/arkiv/programs).
+- [Rabdi block explorer](https://rabdi.explorer.arkiv.network/).
 
-**Use Hugo's registration screen for the contract that this app will manage.** Registration validates the exact generated deployment bytecode and constructor arguments. A separately modified Remix/Studio deployment is not automatically importable.
+The records use schema `poc.v2.attestation`, filtered by your configured issuer. They show eligibility/settlement references, not private identity-to-wallet mappings or individual reward amounts. Current expiry is 90 days. Save actual entity keys, issuer address, transaction links and a screenshot of the live read for your demo.
 
-1. For the Arc sponsor requirement, start in [Arc Studio](https://studio.arc.io/) and retain the actual shareable project URL. Describe a repository USDC treasury with an immutable total PR cap, owner-controlled funding and separate contributor shares. Keep Studio work/demo evidence; do not claim it happened if it did not.
-2. In your checkout, generate the deployment artifact from the current contract:
+## 7. CRE: simulate verification after Arc works
 
-   ```sh
-   cd app
-   npm run compile:project
-   ```
+CRE reads your hosted report and Arc treasury. It is a separate verification demonstration; it does not replace the merge workflow or send the payouts.
 
-   If already inside `app/`, omit `cd app`. If this changes the generated artifact, commit it and redeploy Vercel before registration so the browser and backend agree on bytecode.
-3. Open your deployed Hugo app → **Admin → Register repository**.
-4. Enter the **todo demo repository** as `OWNER/REPO` and choose the permanent **combined reward cap per PR** in USDC. The cap covers all recipients together and cannot be changed after deployment.
-5. Connect the **owner** browser-wallet account on Arc Testnet. Sign the wallet-binding message.
-6. Confirm the contract-creation transaction. The UI deploys `app/contracts/ContributionTreasury.sol` using the compiled artifact and these arguments:
-
-   | Argument | Value supplied by Hugo |
-   |---|---|
-   | `token` | Arc USDC ERC-20 address above |
-   | `repo` | `keccak256("github:repository:<numeric repository ID>")` |
-   | `signer` | Address derived from backend `PAYOUT_VOUCHER_SIGNER_KEY` |
-   | `maximum` | Your chosen cap converted to integer micro-USDC |
-
-7. Wait for confirmation. The backend verifies the deployment and stores the treasury/repository association. If the page is interrupted, use **Continue registration** with the same wallet.
-8. Open the project and copy its **funding address**. This is the actual deployed treasury. Save its explorer URL and deployment receipt for the demo.
-9. Add funds using **Add project funds**. Confirm the exact USDC approval, then the `fund` transaction. Directly sending tokens to the treasury bypasses its accounting; use this form or the contract's `fund` method.
-10. Open **Funding controls → Start Funding** and confirm the transaction. New treasuries begin stopped. Depositing money alone does not start funding.
-
-`NEXT_PUBLIC_TREASURY_ADDRESS` is an optional fallback for generic donation UI. Normal project registration, funding and payouts use the treasury saved per project; you do not need to redeploy the app each time you register a repository.
-
-## 11. Run your first real merge/payout demo
-
-1. Verify the deployed app, workflow secrets, owner/donor funds and backend signer gas balance.
-2. Donate **before** the PR merge, and Start Funding. Keep the first PR small.
-3. For automatic payment, have the contributor sign in once at `/redeem` using thirdweb GitHub before the merge. For the unregistered path, leave them unlinked.
-4. Open and merge a PR in the **todo demo repository**. In that repository’s GitHub **Actions**, open **Hugo — evaluate merged PR**.
-5. The workflow sends contribution details; the API runs 0G, persists the assessment, calculates shares, confirms a reservation and attempts payments to already linked contributors. Inspect the action response and real Arc receipts.
-6. An unregistered contributor can now visit `/redeem`, log in with GitHub and claim their reserved share. Stopping funding does not cancel it.
-
-Funding eligibility uses the merge timestamp supplied by the workflow and confirmed onchain funding transitions. Reviews alone earn zero. The current deterministic policy is:
-
-```text
-inflow = confirmed deposits in the seven days before the merge
-daily = floor(inflow * 8000 / 70000)
-quality = highest positive code-contributor score, from 0 to 100
-reward = min(available, floor(min(daily, immutable_PR_cap) * quality / 100))
-```
-
-Positive code-contributor scores determine proportional shares. For example, 700 USDC recent funding and top score 80 yields 64 USDC before availability/cap constraints. No funds means no funded claim. Shares are fixed once calculated; a later donation does not increase that PR's allocation.
-
-There is no automated recovery cron. For an interrupted merge request, rerun the GitHub workflow; persisted evaluation/reservation/transaction records are reused where present. A pending payment can be checked through its existing claim flow. Never infer a failed transfer solely from an HTTP timeout; inspect the stored transaction/explorer.
-
-## 12. Arkiv: get keys, publish, and show live reads
-
-1. Open [Arkiv Hub access keys](https://hub.arkiv.network/access-keys), create an access key, and set backend `ARKIV_ACCESS_KEY`.
-2. Use a separate test wallet for the issuer. Set its private key as backend `ARKIV_WRITER_PRIVATE_KEY` and its public address as `ARKIV_ISSUER_ADDRESS`.
-3. Fund that address with tGLM using the [Arkiv faucet](https://hub.arkiv.network/faucet). The current adapter uses **Rabdi**, chain ID `7794095`.
-4. Generate another random secret and set backend `WORKER_API_SECRET`. Despite its older name, it now protects the manual Arkiv publishing endpoint; no evaluation worker exists.
-5. Redeploy after adding those values. In your local `app/.env.local`, also set `POC_APP_URL` to your hosted origin and `WORKER_API_SECRET` to the same publishing token.
-6. After registering a project or processing a contribution, run from `app/`:
-
-   ```sh
-   node --env-file=.env.local --import tsx scripts/arkiv-sync.ts
-   ```
-
-   The script publishes queued changes through the hosted API and prints actual entity keys/transaction hashes. It stops when the queue is empty or after twenty publications; run again if needed.
-7. Open your hosted `/arkiv` page. It queries issuer-owned contribution records live. You can also query `/api/arkiv/contributions` and `/api/arkiv/programs` in your browser; these read the SDK's `poc.v2.attestation` schema with the configured issuer filter.
-8. Save the actual issuer address, entity keys, query URLs and a screenshot of the live page for submission. The records currently expire after 90 days.
-
-Private claimant mappings and individual amounts are omitted from these entities; Arc transfers remain public. Access-key setup reference: [Arkiv documentation](https://docs.arkiv.network/start-here/access-keys/).
-
-## 13. Chainlink CRE: install and run a genuine simulation
-
-Do this after one real reservation exists. CRE validates a reservation; it does not replace the post-merge API or send the payments.
-
-1. Follow the [official CLI installation guide](https://docs.chain.link/cre/getting-started/cli-installation/macos-linux). For macOS/Linux the documented installer is:
-
-   ```sh
-   curl -sSL https://app.chain.link/cre/install.sh | bash
-   cre version
-   cre login
-   ```
-
-   Authenticate with your Chainlink platform account. For non-interactive use, obtain `CRE_API_KEY` from your account if available; it is a local CLI credential, not a browser key. [CLI login reference](https://docs.chain.link/cre/guides/cli/cli-login).
-2. Create backend `CRE_EXTERNAL_REPORT_TOKEN` using `openssl rand -hex 32` and redeploy.
-3. Copy `app/cre/.env.example` to `app/cre/.env`. Set `CRE_EXTERNAL_REPORT_TOKEN` to the exact backend value. Set a real `CRE_API_KEY` only if using that auth method; remove the placeholder line if using `cre login`.
-4. Get the reservation UUID from the merge API response's `rewardId` or from Supabase's `merge_reservations` table. It must be a confirmed `RESERVED` or `SETTLED` record, not a PR number, claim ID or old epoch ID.
-5. Edit `app/cre/workflow/config.staging.json`:
+1. [Create/log in to a Chainlink account](https://app.chain.link/cre/discover).
+2. Follow the [official CLI installer](https://docs.chain.link/cre/getting-started/cli-installation/macos-linux), then run `cre login`.
+3. In Vercel, add `CRE_EXTERNAL_REPORT_TOKEN` using a separate long random value and redeploy.
+4. Copy `app/cre/.env.example` to `app/cre/.env`. Set the same `CRE_EXTERNAL_REPORT_TOKEN`. If using `cre login`, remove the placeholder `CRE_API_KEY` line. Only set a real CLI API key if that is your chosen authentication method.
+5. Find a confirmed reservation UUID in Supabase's `merge_reservations` table, or the merge API's `rewardId`. It must have status `RESERVED` or `SETTLED`.
+6. Edit `app/cre/workflow/config.staging.json`:
 
    ```json
    {
      "schedule": "0 */10 * * * *",
-     "reportUrl": "https://YOUR_APP.vercel.app/api/cre/report/YOUR_RESERVATION_UUID",
-     "expectedOrigin": "https://YOUR_APP.vercel.app",
-     "treasuryAddress": "YOUR_ACTUAL_PROJECT_TREASURY_ADDRESS"
+     "reportUrl": "https://hugo-three-amber.vercel.app/api/cre/report/YOUR_RESERVATION_UUID",
+     "expectedOrigin": "https://hugo-three-amber.vercel.app",
+     "treasuryAddress": "YOUR_ACTUAL_ARC_TREASURY_ADDRESS"
    }
    ```
 
-   Replace all placeholders. The existing `app/cre/project.yaml` supplies Arc Testnet RPC; `app/cre/secrets.yaml` maps the report token.
-6. Install and compile:
+7. From the Hugo repository root:
 
    ```sh
    cd app/cre/workflow
@@ -350,51 +379,52 @@ Do this after one real reservation exists. CRE validates a reservation; it does 
    cre workflow simulate ./workflow --target staging-settings
    ```
 
-   From `app/cre`, the CLI finds `project.yaml`, `workflow/workflow.yaml` and the `.env` secrets. Follow any CLI prompt to choose the cron trigger.
-7. Save the actual successful simulation output. It should fetch the authenticated report, read finalized Arc state, and validate repository, reservation, merge-time funding eligibility and immutable cap. An auth error or compiled WASM alone is not a successful simulation.
+8. Follow any trigger selection prompt and save the actual successful output. An authentication error or compiled WASM alone is not a successful simulation. No production CRE deployment is needed for this guide. [CRE overview](https://docs.chain.link/cre/overview).
 
-A simulation makes real network calls. Live decentralized CRE deployment is not implemented or claimed here. [CRE overview](https://docs.chain.link/cre/overview).
+## 8. Sponsor tracks and costs
 
-## 14. Which values go where?
-
-| Where | Values |
+| Integration / intended track | Evidence to collect |
 |---|---|
-| Vercel + local app environment | Core values in section 9; Arkiv fields and report/publishing tokens when used |
-| GitHub repository Actions secrets | Only `POC_API_URL` and `POC_MERGE_TRIGGER_SECRET` for the merge workflow |
-| Supabase GitHub provider settings | GitHub OAuth Client ID and Client Secret |
-| thirdweb Dashboard | GitHub authentication configuration and allowed domains |
-| Local `app/cre/.env` | CRE report token and optional real CRE API key |
-| Browser wallet | Owner account; never upload its private key to Vercel |
+| Arc: Best Smart Contracts with Advanced Stablecoin Logic, In Arc Studio | Actual Studio project URL/work, working treasury and deployment/funding/payment receipts |
+| Arkiv: Build on Arkiv, if your event category permits | Real writes, live UI reads, issuer address and reproducible query |
+| Chainlink: Best workflow with CRE | Successful genuine CLI simulation using Arc + hosted API |
+| 0G: inference integration | Actual 0G request/model evidence; check the prize fit separately |
 
-Only values prefixed `NEXT_PUBLIC_` may reach the browser. No payout signer, service-role key, thirdweb secret or 0G key belongs in GitHub's source code or public variables. The AI endpoint is determined by `AI_PROVIDER`. Arc chain ID and USDC address are code constants, so no environment settings are needed for them. Set the CRE report URL in `app/cre/workflow/config.staging.json`, and CLI credentials only in `app/cre/.env`.
+Check the [official event requirements](https://ethglobal.com/events/mumbai/prizes). Installing an SDK alone does not establish eligibility. Sponsor criterion documents remain in `app/arkiv/`. Record your AI-use disclosure and use the included open-source license.
 
-## 15. Fast troubleshooting
+Supabase Free, Vercel Hobby, public-repository standard GitHub Actions, public testnet RPCs and faucet assets avoid a paid hosting stack. Inference credits and thirdweb/Studio/CRE account entitlements must actually be available to your account; do not assume all services have unlimited free use. Stop instead of buying upgrades if you need a strictly zero-spend demo.
 
-| Symptom | What to check |
+## Local development
+
+Node 24 LTS is recommended. From the repository root:
+
+```sh
+cd app
+npm ci
+test -f .env.local || cp .env.example .env.local
+npm run dev
+```
+
+**Only copy the example if you do not already have `.env.local`; do not overwrite your tokens.** Fill values using the same service accounts above, but keep local `NEXT_PUBLIC_APP_URL=http://localhost:3000`. Never commit real keys. There is no dummy-data mode.
+
+- Owner workspace: http://localhost:3000/admin
+- Contributor login: http://localhost:3000/redeem
+- Todo demo runs separately on http://localhost:3001
+
+## If something fails
+
+| Symptom | First thing to check |
 |---|---|
-| Owner login fails | Supabase GitHub provider credentials, Supabase callback in GitHub OAuth App, app callback in Supabase redirect allowlist, exact app origin |
-| Repository registration unavailable | Correct public `OWNER/REPO`, accessible GitHub API; ownership is assumed and no PAT is needed |
-| Contract deployment rejected | Arc chain 5042002, funded owner, owner differs from backend signer, current artifact and matching deployed app build |
-| Reservation/payment cannot send | Backend signer has Arc testnet gas; project was funded through `fund`; signer key matches the treasury's signer |
-| No reward | Funding was active at supplied merge time, deposit occurred before merge, 0G returned eligible positive scores, sufficient available funds |
-| Action gets 401 | Workflow's shared secret exactly matches backend `MERGE_TRIGGER_SECRET` |
-| Action gets HTML instead of API JSON | Wrong API origin or deployment protection intercepting the request |
-| Action gets 413 | Evidence exceeds the API's current 1 MiB cap; use a small demo PR |
-| Request times out | Check Vercel logs and transaction receipts; synchronous inference + multiple chain confirmations may exceed hosting duration |
-| thirdweb login rejected | Same thirdweb project for both keys, GitHub enabled, domain allowed, verified profile exposes numeric GitHub ID |
-| Arkiv page empty | Credentials/issuer match, issuer has tGLM, queue was published, entity has not expired |
-| CRE authentication error | `cre login` or a real `CRE_API_KEY`; no placeholder key in `.env` |
-| CRE report unavailable | Correct reservation UUID and token, actual confirmed reservation, exact HTTPS report origin |
+| `db: down` | Vercel Production Supabase URL/server key, initialized schema, project not paused |
+| Local login works, hosted login fails | Production origin, Supabase redirects, current deployed auth fix |
+| Contract creation cannot send | Owner has Arc Testnet gas; backend key differs from owner |
+| Backend reservation/payment cannot send | Backend signer has Arc test funds and matches the treasury signer |
+| No reward | Funding active at supplied merge time; positive eligible score; pre-merge deposit; available funds |
+| Workflow gets 401 | Its shared secret exactly matches Vercel `MERGE_TRIGGER_SECRET` |
+| Workflow gets HTML | Wrong host or Vercel protection login intercepting the API |
+| thirdweb login rejected | Matching project keys, GitHub enabled, correct allowed domain, numeric GitHub identity available |
+| Arkiv write fails | Writer key/address match; writer has tGLM; access key is valid |
+| Arkiv page empty | Contribution was processed; publisher ran; correct issuer filter |
+| CRE report unavailable | Real reservation UUID, confirmed reservation, correct report token |
 
-## 16. What to collect for your final demo
-
-- Hosted app URL and public GitHub repository.
-- Actual Arc Studio project URL and a demo showing your Studio work.
-- Treasury deployment, funding, reservation and payout explorer links.
-- Actual 0G request/model metadata and stored evaluation.
-- Both registered auto-pay and unregistered claim flows if demonstrating both.
-- Actual Arkiv issuer/entity keys and a live read from `/arkiv`.
-- Successful CRE simulation output.
-- Your AI-use disclosure, license and the sponsor criterion documents already present in the repo, updated with real evidence.
-
-Nothing in this README is evidence that a deployment or integration already ran. Fill the above with your actual results as you execute these steps.
+No keys, receipts or successful integration results are supplied by this README. Use your actual results when recording the final demo.
