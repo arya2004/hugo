@@ -102,7 +102,7 @@ describe('identity and canonical signatures', () => {
   it('requires matching server-verified user and numeric identity; ignores metadata', () => {
     const user = {
       id: 'user',
-      identities: [{ provider: 'github', provider_id: '123', user_id: 'user' }],
+      identities: [{ provider: 'github', id: '123', identity_id: 'identity-uuid', user_id: 'user' }],
     };
     expect(githubIdentity(user, 'user').githubUserId).toBe('123');
     expect(() => githubIdentity(user, 'attacker')).toThrow();
@@ -110,12 +110,16 @@ describe('identity and canonical signatures', () => {
       githubIdentity(
         {
           id: 'user',
-          identities: [{ provider: 'github', provider_id: 'username', user_id: 'user' }],
+          identities: [{ provider: 'github', id: 'username', identity_id: 'identity-uuid', user_id: 'user' }],
         },
         'user',
       ),
     ).toThrow();
     expect(() => githubIdentity({ id: 'user' }, 'user')).toThrow();
+    expect(() => githubIdentity({
+      id: 'user',
+      identities: [{ provider: 'github', id: '123', identity_id: 'identity-uuid', user_id: 'another-user' }],
+    }, 'user')).toThrow();
   });
   it('canonical report hash independent of key order but sensitive to amount', () => {
     expect(hash({ a: 1, b: '2' })).toBe(hash({ b: '2', a: 1 }));

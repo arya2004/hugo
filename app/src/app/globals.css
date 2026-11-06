@@ -1289,3 +1289,21 @@ button:focus-visible {
 .mr-comment .muted {
   font-size: 10px;
 }
+
+.account-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  header {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .account-menu {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

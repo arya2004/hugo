@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
+import { AccountMenu } from '../components/client';
 
 export const metadata: Metadata = {
   title: 'Hugo — fund your project',
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               Contributor rewards ↗
             </Link>
           </nav>
+          <AccountMenu />
         </header>
         <main>{children}</main>
         <footer>

@@ -131,19 +131,76 @@ export function Login({ next = '/contributor' }: { next?: string }) {
   );
 }
 
+export function AccountMenu() {
+  const [githubId, setGithubId] = useState('');
+
+  useEffect(() => {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    ) {
+      return;
+    }
+    const client = browserClient();
+    let active = true;
+    const update = (user: { user_metadata: Record<string, unknown> } | null) => {
+      if (active) {
+        setGithubId(
+          String(user?.user_metadata.user_name ?? user?.user_metadata.provider_id ?? ''),
+        );
+      }
+    };
+    client.auth.getUser()
+      .then(({ data }) => update(data.user))
+      .catch(() => undefined);
+    const { data } = client.auth.onAuthStateChange((_event, session) =>
+      update(session?.user ?? null),
+    );
+    return () => {
+      active = false;
+      data.subscription.unsubscribe();
+    };
+  }, []);
+
+  return githubId ? (
+    <div className="account-menu">
+      <span>Hi, {githubId}</span>
+      <SignOut />
+    </div>
+  ) : null;
+}
+
 export function SignOut() {
   const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
   return (
-    <button
-      className="quiet"
-      onClick={async () => {
-        await browserClient().auth.signOut();
-        router.push('/');
-        router.refresh();
-      }}
-    >
-      Sign out
-    </button>
+    <div>
+      <button
+        className="quiet"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          setError('');
+          try {
+            const { error } = await browserClient().auth.signOut();
+            if (error) {
+              throw error;
+            }
+            router.push('/');
+            router.refresh();
+          } catch (error) {
+            setError(message(error));
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {busy ? 'Logging out…' : 'Logout'}
+      </button>
+      {error && <span role="alert">{error}</span>}
+    </div>
   );
 }
 

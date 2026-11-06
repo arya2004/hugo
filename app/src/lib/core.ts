@@ -1,3 +1,4 @@
+import type { User } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { canonicalize } from 'json-canonicalize';
 import { keccak256, stringToHex, type Address, type Hex } from 'viem';
@@ -98,10 +99,7 @@ export function validateScores(input: unknown, roster: Roster, keys: string[]) {
 }
 
 export function githubIdentity(
-  user: {
-    id: string;
-    identities?: { provider: string; provider_id?: string; user_id?: string }[];
-  },
+  user: Pick<User, 'id' | 'identities'>,
   sub: string,
 ) {
   if (user.id !== sub) {
@@ -111,10 +109,10 @@ export function githubIdentity(
     (i) =>
       i.provider === 'github' &&
       i.user_id === sub &&
-      numericId.safeParse(i.provider_id).success,
+      numericId.safeParse(i.id).success,
   );
   if (ids?.length !== 1) {
     throw Error('Verified GitHub identity required');
   }
-  return { authUserId: sub, githubUserId: ids[0].provider_id! };
+  return { authUserId: sub, githubUserId: ids[0].id! };
 }

@@ -7,18 +7,12 @@ import { AppError } from './env';
 
 export async function principal() {
   const client = await serverClient();
-  const { data, error } = await client.auth.getClaims();
-  if (error || !data?.claims.sub) {
+  const { data, error } = await client.auth.getUser();
+  if (error || !data.user) {
     throw new AppError(401, 'LOGIN_REQUIRED', 'Sign in with GitHub');
   }
-  const { data: admin, error: adminError } = await db().auth.admin.getUserById(
-    data.claims.sub,
-  );
-  if (adminError || !admin.user) {
-    throw new AppError(401, 'LOGIN_REQUIRED', 'Session user unavailable');
-  }
   try {
-    return githubIdentity(admin.user, data.claims.sub);
+    return githubIdentity(data.user, data.user.id);
   } catch {
     throw new AppError(
       403,
