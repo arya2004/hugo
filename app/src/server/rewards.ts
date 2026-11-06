@@ -356,5 +356,7 @@ export async function rewardDto(reservation: any) {
     recipientCount: recipients.length,
     paidCount: recipients.filter((a) => a.status === 'PAID').length,
     reportHash: reservation.report_hash,
+    reserveTxHash: reservation.reserve_tx_hash,
+    paymentTxHashes: [...new Set(recipients.map((a) => a.payment_tx_hash).filter(Boolean))],
   };
 }

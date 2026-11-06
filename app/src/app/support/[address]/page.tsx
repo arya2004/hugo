@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { address as addressSchema } from '../../../lib/core';
 import { Donation } from '../../../components/client';
+import { ExplorerLink } from '../../../components/explorer-link';
 
 export default async function Support({
   params,
@@ -15,7 +16,9 @@ export default async function Support({
   return (
     <section className="card form">
       <h1>Support a repository</h1>
-      <p className="funding-address">{parsed.data}</p>
+      <p className="funding-address">
+        <ExplorerLink kind="address" value={parsed.data} />
+      </p>
       <p>
         Verify this treasury address with the project owner. All deposits fund contributor
         rewards. Donating does not change funding eligibility.

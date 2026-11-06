@@ -6,6 +6,7 @@ import { parseUnits, type Address, type Hex, type Abi } from 'viem';
 import { api, LiveData, money, Donation, WalletBind, wallet, wait } from './client';
 import { USDC } from '../lib/contracts';
 import artifact from '../lib/generated/project-treasury.json';
+import { ExplorerLink } from './explorer-link';
 
 const errorText = (e: unknown) =>
   e instanceof Error ? e.message : 'Unable to complete this action';
@@ -115,7 +116,16 @@ export function ProjectFunding({ id }: { id: string }) {
             <section className="card">
               <span className="eyebrow">PERMANENT REPOSITORY FUNDING ADDRESS</span>
               <h2>Funds for contributors. Only.</h2>
-              <p className="funding-address">{p.fundingAddress}</p>
+              <p className="funding-address">
+                <ExplorerLink kind="address" value={p.fundingAddress} />
+              </p>
+              {p.deploymentTxHash && (
+                <p>
+                  <ExplorerLink value={p.deploymentTxHash}>
+                    View treasury deployment ↗
+                  </ExplorerLink>
+                </p>
+              )}
               <button
                 onClick={async () => {
                   try {
@@ -193,6 +203,20 @@ export function ProjectRewards({ id }: { id: string }) {
                         ? `${money(r.amount_micro)} USDC`
                         : 'Awaiting project funding'}
                     </p>
+                    {r.reserveTxHash && (
+                      <p>
+                        <ExplorerLink value={r.reserveTxHash}>
+                          View reward reservation ↗
+                        </ExplorerLink>
+                      </p>
+                    )}
+                    {r.paymentTxHashes?.map((tx: string) => (
+                      <p key={tx}>
+                        <ExplorerLink value={tx}>
+                          View payout ↗ {tx.slice(0, 10)}…
+                        </ExplorerLink>
+                      </p>
+                    ))}
                   </div>
                 </article>
               ))}

@@ -16,6 +16,7 @@ import { arcTestnet } from 'viem/chains';
 import { browserClient } from '../lib/supabase/client';
 import { USDC } from '../lib/contracts';
 import { projectAbi } from '../lib/project-contract';
+import { ExplorerLink } from './explorer-link';
 
 declare global {
   interface Window {
@@ -95,9 +96,9 @@ export async function wait(tx: Hex) {
 
 function Tx({ tx }: { tx: string }) {
   return (
-    <a href={`https://explorer.testnet.arc.io/tx/${tx}`} target="_blank" rel="noreferrer">
+    <ExplorerLink value={tx}>
       View Arc transaction ↗
-    </a>
+    </ExplorerLink>
   );
 }
 

@@ -13,6 +13,7 @@ import { createPublicClient, formatUnits, http, type Address } from 'viem';
 import { arcTestnet } from 'viem/chains';
 import { ARC_CHAIN_ID } from '../lib/contracts';
 import { withdrawAll } from '../lib/wallet-transfer';
+import { ExplorerLink } from './explorer-link';
 
 const rpc = process.env.NEXT_PUBLIC_ARC_RPC_URL ?? 'https://rpc.testnet.arc.io';
 const chain = defineChain({ id: ARC_CHAIN_ID, rpc });
@@ -194,7 +195,9 @@ export function WalletTransfer({
             Send <strong>{formatUnits(review.value, 18)} USDC</strong> on Arc
             Testnet to:
           </p>
-          <p className="funding-address">{review.to}</p>
+          <p className="funding-address">
+            <ExplorerLink kind="address" value={review.to} />
+          </p>
           <p>Reserved network fee: {formatUnits(review.fee, 18)} USDC</p>
           <button
             className="primary"
@@ -211,13 +214,9 @@ export function WalletTransfer({
       )}
       <p role="status">{status}</p>
       {txHash && (
-        <a
-          href={`https://explorer.testnet.arc.io/tx/${txHash}`}
-          target="_blank"
-          rel="noreferrer"
-        >
+        <ExplorerLink value={txHash}>
           View transfer on Arc ↗
-        </a>
+        </ExplorerLink>
       )}
     </section>
   );

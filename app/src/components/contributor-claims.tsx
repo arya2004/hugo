@@ -5,6 +5,7 @@ import type { Account } from 'thirdweb/wallets';
 import { WalletTransfer } from './wallet-transfer';
 import { inAppWallet } from 'thirdweb/wallets/in-app';
 import { api, money } from './client';
+import { ExplorerLink } from './explorer-link';
 
 type Claim = {
   id: string;
@@ -19,6 +20,7 @@ export function ContributorClaims() {
   const [wallet, setWallet] = useState('');
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
+  const [paymentTx, setPaymentTx] = useState('');
 
   async function refresh() {
     const result = await api('contributor/allocations');
@@ -75,7 +77,11 @@ export function ContributorClaims() {
       <button className="primary" disabled={busy} onClick={signIn}>
         {busy ? 'Working…' : 'Continue with GitHub'}
       </button>
-      {wallet && <p className="funding-address">Receiving wallet: {wallet}</p>}
+      {wallet && (
+        <p className="funding-address">
+          Receiving wallet: <ExplorerLink kind="address" value={wallet} />
+        </p>
+      )}
       {claims?.map((claim) => (
         <article className="card" key={claim.id}>
           <strong>{money(claim.amountMicro)} USDC</strong>
@@ -93,6 +99,7 @@ export function ContributorClaims() {
                   `contributor/allocations/${claim.id}/claim`,
                   {},
                 );
+                setPaymentTx(payment.txHash ?? '');
                 setStatus(
                   payment.status === 'PAID'
                     ? 'Payment confirmed on Arc.'
@@ -114,6 +121,11 @@ export function ContributorClaims() {
         <p>No unclaimed, confirmed rewards for this GitHub account.</p>
       )}
       <p role="status">{status}</p>
+      {paymentTx && (
+        <p>
+          <ExplorerLink value={paymentTx}>View claim transaction ↗</ExplorerLink>
+        </p>
+      )}
       {connection && (
         <WalletTransfer
           key={connection.account.address}

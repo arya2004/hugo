@@ -2,10 +2,12 @@
 import { useState } from 'react';
 import { api, LiveData, money, wallet, wait } from './client';
 import { projectAbi } from '../lib/project-contract';
+import { ExplorerLink } from './explorer-link';
 
 export function FundingControls({ id }: { id: string }) {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
+  const [txHash, setTxHash] = useState('');
   return (
     <LiveData path={`projects/${id}`}>
       {(project) => (
@@ -38,6 +40,7 @@ export function FundingControls({ id }: { id: string }) {
                     functionName: 'setFundingActive',
                     args: [!project.fundingActive],
                   });
+                  setTxHash(tx);
                   await wait(tx);
                   await api(`projects/${id}/funding-state-confirm`, { txHash: tx });
                 }
@@ -61,6 +64,11 @@ export function FundingControls({ id }: { id: string }) {
                 : 'Start Funding'}
           </button>
           <p role="status">{status}</p>
+          {txHash && (
+            <p>
+              <ExplorerLink value={txHash}>View funding control transaction ↗</ExplorerLink>
+            </p>
+          )}
         </section>
       )}
     </LiveData>

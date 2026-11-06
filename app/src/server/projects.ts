@@ -71,6 +71,7 @@ export async function projectDetail(project: any) {
     name: project.name,
     description: project.description,
     fundingAddress: project.treasury_address,
+    deploymentTxHash: project.deployment_tx_hash,
     ownerWallet: project.owner_wallet,
     repositoryKey: state.repositoryKey,
     maxRewardMicro: state.maximum.toString(),
